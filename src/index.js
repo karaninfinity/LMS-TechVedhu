@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.route.js";
 
 dotenv.config();
 const app = express();
@@ -17,7 +18,7 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/users", require("./routes/user.routes"));
+app.use("/api/users", userRoutes);
 // app.use("/api/courses", require("./routes/course.routes"));
 
 // Error handling middleware

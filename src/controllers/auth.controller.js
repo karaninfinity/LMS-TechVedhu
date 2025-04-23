@@ -4,6 +4,7 @@ import prisma from "../../config/prisma.js";
 import { mailOptions, transporter } from "../../utils/mail.js";
 import { generateOTP } from "../../utils/helper.js";
 import moment from "moment";
+import { Role } from "@prisma/client";
 
 export const register = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ export const register = async (req, res) => {
         password: hashedPassword,
         firstName,
         lastName,
-        role: role || "STUDENT",
+        role: role || Role.STUDENT,
       },
       select: {
         id: true,
