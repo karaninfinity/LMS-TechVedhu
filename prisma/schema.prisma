@@ -20,6 +20,7 @@ model User {
   status    Status   @default(INACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  courses   Course[]
 }
 
 model otp {
@@ -31,23 +32,106 @@ model otp {
   expiry     DateTime
 }
 
+model Course {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String    @db.Text
+  coverImage  String?   @db.Text
+  instructorId Int
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  instructor  User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  chapters    Chapter[]
 
-// model Course {
-//   id          Int      @id @default(autoincrement())
-//   title       String
-//   description String   @db.Text
-//   instructorId Int
-//   instructor   User     @relation("Instructor", fields: [instructorId], references: [id])
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
+  @@index([instructorId])
+}
 
-//   // Relations
-//   enrollments  Enrollment[]
-//   assignments  Assignment[]
+model Chapter {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  position    Int       // For ordering chapters
+  isPublished Boolean   @default(false)
+  courseId    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+  tests       Test[]
 
-//   @@index([instructorId])
-// }
+  @@index([courseId])
+}
 
+model Lesson {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String    @db.Text
+  videoUrl    String?   @db.Text
+  position    Int       @default(0)
+  isPublished Boolean   @default(false)
+  chapterId   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([chapterId])
+}
+
+model Test {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  timeLimit   Int?      // Time limit in minutes
+  passingScore Int      @default(70) // Passing score percentage
+  isPublished Boolean   @default(false)
+  chapterId   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  questions   Question[]
+
+  @@index([chapterId])
+}
+
+model Question {
+  id          Int       @id @default(autoincrement())
+  question    String    @db.Text
+  type        QuestionType
+  points      Int       @default(1)
+  testId      Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  options     Option[]
+
+  @@index([testId])
+}
+
+model Option {
+  id          Int       @id @default(autoincrement())
+  content     String    @db.Text
+  isCorrect   Boolean   @default(false)
+  questionId  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model Attachment {
+  id          Int       @id @default(autoincrement())
+  name        String
+  url         String    @db.Text
+  lessonId    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  type        AttachmentType?
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@index([lessonId])
+}
 // model Enrollment {
 //   id        Int      @id @default(autoincrement())
 //   userId    Int
@@ -110,6 +194,20 @@ enum Role {
 enum Status {
   ACTIVE
   INACTIVE
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SINGLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+enum AttachmentType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  LINK
 }
 // enum EnrollmentStatus {
 //   ENROLLED
