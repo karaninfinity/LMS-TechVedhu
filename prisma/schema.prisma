@@ -17,6 +17,7 @@ model User {
   firstName String
   lastName  String
   role      Role     @default(STUDENT)
+  status    Status   @default(INACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -106,6 +107,10 @@ enum Role {
   ADMIN
 }
 
+enum Status {
+  ACTIVE
+  INACTIVE
+}
 // enum EnrollmentStatus {
 //   ENROLLED
 //   COMPLETED

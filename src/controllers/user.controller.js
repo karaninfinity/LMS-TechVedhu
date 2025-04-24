@@ -51,3 +51,18 @@ export const deleteUser = async (req, res) => {
   });
   res.json({ message: "User deleted successfully", success: true, data: user });
 };
+
+export const updateUserStatus = async (req, res) => {
+  const { status } = req.body;
+  const user = await prisma.user.update({
+    where: { id: parseInt(req.params.id) },
+    data: {
+      status: status,
+    },
+  });
+  res.json({
+    message: "User status updated successfully",
+    success: true,
+    data: user,
+  });
+};
