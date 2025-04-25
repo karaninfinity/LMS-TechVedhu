@@ -1,7 +1,13 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
 export const getUsers = async (req, res) => {
-  const users = await prisma.user.findMany();
+  const query = req.query;
+
+  const users = await prisma.user.findMany({
+    where: {
+      ...query,
+    },
+  });
   res.json({
     message: "Users fetched successfully",
     success: true,
@@ -47,7 +53,22 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   const user = await prisma.user.delete({
-    where: { id: req.params.id },
+    where: { id: parseInt(req.params.id) },
   });
   res.json({ message: "User deleted successfully", success: true, data: user });
+};
+
+export const updateUserStatus = async (req, res) => {
+  const { status } = req.body;
+  const user = await prisma.user.update({
+    where: { id: parseInt(req.params.id) },
+    data: {
+      status: status,
+    },
+  });
+  res.json({
+    message: "User status updated successfully",
+    success: true,
+    data: user,
+  });
 };

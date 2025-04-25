@@ -4,7 +4,7 @@ import prisma from "../../config/prisma.js";
 import { mailOptions, transporter } from "../../utils/mail.js";
 import { generateOTP } from "../../utils/helper.js";
 import moment from "moment";
-import { Role } from "@prisma/client";
+import { Role, Status } from "@prisma/client";
 
 export const register = async (req, res) => {
   try {
@@ -74,6 +74,10 @@ export const login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid password" });
+    }
+
+    if (user.status === Status.INACTIVE) {
+      return res.status(401).json({ message: "User is not active" });
     }
 
     // Generate JWT token
