@@ -3,11 +3,18 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.route.js";
+import courseRoutes from "./routes/course.routes.js";
 
 dotenv.config();
 const app = express();
+
+// Get directory name in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(express.json());
@@ -16,10 +23,12 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-// app.use("/api/courses", require("./routes/course.routes"));
+app.use("/api/courses", courseRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
