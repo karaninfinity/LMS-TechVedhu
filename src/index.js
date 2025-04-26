@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.route.js";
 import courseRoutes from "./routes/course.routes.js";
-import chapterRoutes from "./routes/chapter.routes.js";
 
 dotenv.config();
 const app = express();
@@ -30,7 +29,6 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/chapters", chapterRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

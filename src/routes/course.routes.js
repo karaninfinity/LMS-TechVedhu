@@ -9,12 +9,16 @@ import {
   togglePublish,
 } from "../controllers/course.controller.js";
 import upload from "../utils/multer.js";
+import chapterRoutes from "./chapter.routes.js";
 
 const router = express.Router();
 
 // Public routes
 router.get("/", getCourses);
 router.get("/:id", getCourse);
+
+// Mount chapter routes
+router.use("/:courseId/chapters", chapterRoutes);
 
 // Protected routes (require authentication)
 router.use(auth);
