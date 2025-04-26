@@ -89,6 +89,39 @@ npm run dev
 - POST `/api/auth/verify-otp` - Verify OTP
 - POST `/api/auth/reset-password` - Reset password
 
+## Chapter API Endpoints
+
+Chapter endpoints are nested under course routes.
+
+| Method | Endpoint                                    | Description                   | Auth Required |
+| ------ | ------------------------------------------- | ----------------------------- | ------------- |
+| GET    | /api/courses/:courseId/chapters             | Get all chapters for a course | No            |
+| GET    | /api/courses/:courseId/chapters/:id         | Get a specific chapter        | No            |
+| POST   | /api/courses/:courseId/chapters             | Create a new chapter          | Yes           |
+| PUT    | /api/courses/:courseId/chapters/:id         | Update a chapter              | Yes           |
+| DELETE | /api/courses/:courseId/chapters/:id         | Delete a chapter              | Yes           |
+| PATCH  | /api/courses/:courseId/chapters/:id/publish | Toggle publish status         | Yes           |
+| POST   | /api/courses/:courseId/chapters/reorder     | Reorder chapters              | Yes           |
+
+### Request Body Examples
+
+#### Create/Update Chapter
+
+```json
+{
+  "title": "Chapter Title",
+  "description": "Chapter Description"
+}
+```
+
+#### Reorder Chapters
+
+```json
+{
+  "chapterIds": [3, 1, 2]
+}
+```
+
 ## License
 
 ISC
