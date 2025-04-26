@@ -1,0 +1,294 @@
+import prisma from "../../config/prisma.js";
+
+// Get all lessons for a chapter
+export const getLessons = async (req, res) => {
+  try {
+    const { chapterId } = req.params;
+
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        chapterId: parseInt(chapterId),
+        isPublished: true,
+      },
+      include: {
+        attachments: true,
+      },
+      orderBy: { position: "asc" },
+    });
+
+    res.json({
+      success: true,
+      message: "Lessons fetched successfully",
+      data: lessons,
+    });
+  } catch (error) {
+    console.error("Error getting lessons:", error);
+    res.status(500).json({ message: "Error getting lessons" });
+  }
+};
+
+// Get a single lesson by ID
+export const getLesson = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        attachments: true,
+      },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Lesson fetched successfully",
+      data: lesson,
+    });
+  } catch (error) {
+    console.error("Error getting lesson:", error);
+    res.status(500).json({ message: "Error getting lesson" });
+  }
+};
+
+// Create a new lesson
+export const createLesson = async (req, res) => {
+  try {
+    const { chapterId } = req.params;
+    const { title, content } = req.body;
+
+    // Handle video upload
+    const videoUrl = req.files?.video?.[0]?.path?.replace("\\", "/") || null;
+
+    // Handle attachments
+    const attachmentFiles = req.files?.attachments || [];
+
+    // Get the highest position in the chapter
+    const highestPositionLesson = await prisma.lesson.findFirst({
+      where: { chapterId: parseInt(chapterId) },
+      orderBy: { position: "desc" },
+    });
+
+    const position = highestPositionLesson
+      ? highestPositionLesson.position + 1
+      : 1;
+
+    // Create the lesson
+    const lesson = await prisma.lesson.create({
+      data: {
+        title,
+        content,
+        videoUrl,
+        position,
+        chapterId: parseInt(chapterId),
+        attachments: {
+          create: attachmentFiles.map((file) => ({
+            name: file.originalname,
+            url: file.path.replace("\\", "/"),
+            type: getAttachmentType(file.mimetype),
+          })),
+        },
+      },
+      include: {
+        attachments: true,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Lesson created successfully",
+      data: lesson,
+    });
+  } catch (error) {
+    console.error("Error creating lesson:", error);
+    res.status(500).json({ message: "Error creating lesson" });
+  }
+};
+
+// Update a lesson
+export const updateLesson = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    // Handle video upload
+    const videoUrl = req.files?.video?.[0]?.path?.replace("\\", "/");
+
+    // Handle attachments
+    const attachmentFiles = req.files?.attachments || [];
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    // Create new attachments if files are provided
+    let attachments = undefined;
+    if (attachmentFiles.length > 0) {
+      attachments = {
+        create: attachmentFiles.map((file) => ({
+          name: file.originalname,
+          url: file.path.replace("\\", "/"),
+          type: getAttachmentType(file.mimetype),
+        })),
+      };
+    }
+
+    const updatedLesson = await prisma.lesson.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        content,
+        ...(videoUrl && { videoUrl }),
+        ...(attachments && { attachments }),
+      },
+      include: {
+        attachments: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Lesson updated successfully",
+      data: updatedLesson,
+    });
+  } catch (error) {
+    console.error("Error updating lesson:", error);
+    res.status(500).json({ message: "Error updating lesson" });
+  }
+};
+
+// Delete a lesson
+export const deleteLesson = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    await prisma.lesson.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Reorder remaining lessons
+    const remainingLessons = await prisma.lesson.findMany({
+      where: {
+        chapterId: lesson.chapterId,
+        position: { gt: lesson.position },
+      },
+      orderBy: { position: "asc" },
+    });
+
+    for (const les of remainingLessons) {
+      await prisma.lesson.update({
+        where: { id: les.id },
+        data: { position: les.position - 1 },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Lesson deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting lesson:", error);
+    res.status(500).json({ message: "Error deleting lesson" });
+  }
+};
+
+// Publish/Unpublish a lesson
+export const togglePublish = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    const updatedLesson = await prisma.lesson.update({
+      where: { id: parseInt(id) },
+      data: {
+        isPublished: !lesson.isPublished,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Lesson publish status updated successfully",
+      data: updatedLesson,
+    });
+  } catch (error) {
+    console.error("Error toggling lesson publish status:", error);
+    res.status(500).json({ message: "Error updating lesson" });
+  }
+};
+
+// Reorder lessons
+export const reorderLessons = async (req, res) => {
+  try {
+    const { chapterId } = req.params;
+    const { lessonIds } = req.body;
+
+    if (!Array.isArray(lessonIds)) {
+      return res.status(400).json({ message: "lessonIds must be an array" });
+    }
+
+    // Verify all lessons belong to the chapter
+    const lessons = await prisma.lesson.findMany({
+      where: {
+        chapterId: parseInt(chapterId),
+        id: { in: lessonIds.map((id) => parseInt(id)) },
+      },
+    });
+
+    if (lessons.length !== lessonIds.length) {
+      return res
+        .status(400)
+        .json({ message: "Some lessons don't belong to this chapter" });
+    }
+
+    // Update positions
+    for (let i = 0; i < lessonIds.length; i++) {
+      await prisma.lesson.update({
+        where: { id: parseInt(lessonIds[i]) },
+        data: { position: i + 1 },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Lessons reordered successfully",
+    });
+  } catch (error) {
+    console.error("Error reordering lessons:", error);
+    res.status(500).json({ message: "Error reordering lessons" });
+  }
+};
+
+// Helper function to determine attachment type
+const getAttachmentType = (mimetype) => {
+  if (mimetype.startsWith("image/")) return "IMAGE";
+  if (mimetype.startsWith("video/")) return "VIDEO";
+  if (
+    mimetype.startsWith("application/pdf") ||
+    mimetype.includes("document") ||
+    mimetype.includes("text/")
+  )
+    return "DOCUMENT";
+  return "LINK";
+};

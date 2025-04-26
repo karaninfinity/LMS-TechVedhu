@@ -9,8 +9,12 @@ import {
   reorderChapters,
 } from "../controllers/chapter.controller.js";
 import upload from "../utils/multer.js";
+import lessonRoutes from "./lesson.routes.js";
 
 const router = express.Router({ mergeParams: true });
+
+// Mount lesson routes
+router.use("/:chapterId/lessons", lessonRoutes);
 
 // Public routes
 router.get("/", getChapters);
