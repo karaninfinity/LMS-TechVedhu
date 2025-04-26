@@ -1,7 +1,13 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
 export const getUsers = async (req, res) => {
-  const users = await prisma.user.findMany();
+  const query = req.query;
+
+  const users = await prisma.user.findMany({
+    where: {
+      ...query,
+    },
+  });
   res.json({
     message: "Users fetched successfully",
     success: true,

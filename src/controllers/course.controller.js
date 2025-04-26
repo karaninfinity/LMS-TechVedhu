@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 // Get all courses (with optional filters)
 export const getCourses = async (req, res) => {
   try {
-    const { search, instructorId } = req.query;
+    const { search, instructorId, isPublished } = req.query;
 
     const where = {
-      isPublished: true,
+      ...(isPublished && { isPublished: true }),
       ...(search && {
         OR: [
           { title: { contains: search } },
