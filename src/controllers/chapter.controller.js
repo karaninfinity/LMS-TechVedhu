@@ -79,6 +79,7 @@ export const createChapter = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { title, description } = req.body;
+    const coverImage = req.file ? req.file.path?.replace("\\", "/") : null;
 
     // Get the highest position in the course
     const highestPositionChapter = await prisma.chapter.findFirst({
@@ -94,6 +95,7 @@ export const createChapter = async (req, res) => {
       data: {
         title,
         description,
+        coverImage,
         position,
         courseId: parseInt(courseId),
       },
@@ -115,6 +117,7 @@ export const updateChapter = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
+    const coverImage = req.file ? req.file.path.replace("\\", "/") : undefined;
 
     const chapter = await prisma.chapter.findUnique({
       where: { id: parseInt(id) },
@@ -130,6 +133,7 @@ export const updateChapter = async (req, res) => {
       data: {
         title,
         description,
+        ...(coverImage && { coverImage }),
       },
     });
 

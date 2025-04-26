@@ -51,6 +51,7 @@ model Chapter {
   id          Int       @id @default(autoincrement())
   title       String
   description String?   @db.Text
+  coverImage  String?   @db.Text
   position    Int       // For ordering chapters
   isPublished Boolean   @default(false)
   courseId    Int
