@@ -1,6 +1,5 @@
 import express from "express";
 import { auth } from "../middleware/auth.middleware.js";
-import upload from "../utils/multer.js";
 import {
   getCourses,
   getCourse,
@@ -9,6 +8,7 @@ import {
   deleteCourse,
   togglePublish,
 } from "../controllers/course.controller.js";
+import upload from "../utils/multer.js";
 
 const router = express.Router();
 
