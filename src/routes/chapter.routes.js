@@ -10,12 +10,12 @@ import {
 } from "../controllers/chapter.controller.js";
 import upload from "../utils/multer.js";
 import lessonRoutes from "./lesson.routes.js";
-
+import testRoutes from "./test.routes.js";
 const router = express.Router({ mergeParams: true });
 
 // Mount lesson routes
 router.use("/:chapterId/lessons", lessonRoutes);
-
+router.use("/:chapterId/tests", testRoutes);
 // Public routes
 router.get("/", getChapters);
 router.get("/:id", getChapter);
