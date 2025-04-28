@@ -5,12 +5,17 @@ export const getChapters = async (req, res) => {
   try {
     const { courseId } = req.params;
 
+    const where = {
+      courseId: parseInt(courseId),
+    };
+
+    if (req.query.isPublished) {
+      where.isPublished = req.query.isPublished === "true";
+    }
     const chapters = await prisma.chapter.findMany({
-      where: {
-        courseId: parseInt(courseId),
-        isPublished: true,
-      },
+      where,
       include: {
+        course: true,
         lessons: {
           where: { isPublished: true },
           select: { id: true, title: true, position: true },
