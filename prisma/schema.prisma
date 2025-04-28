@@ -21,6 +21,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   courses   Course[]
+  testAttempts TestAttempt[]
 }
 
 model otp {
@@ -92,6 +93,7 @@ model Test {
   updatedAt   DateTime  @updatedAt
   chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   questions   Question[]
+  attempts    TestAttempt[]
 
   @@index([chapterId])
 }
@@ -101,7 +103,6 @@ model Question {
   question    String    @db.Text
   type        QuestionType @default(SINGLE_CHOICE)
   points      Int       @default(1)
-  position    Int       @default(0)  // Added for ordering questions
   testId      Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -134,58 +135,26 @@ model Attachment {
   lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   @@index([lessonId])
 }
-// model Enrollment {
-//   id        Int      @id @default(autoincrement())
-//   userId    Int
-//   courseId  Int
-//   status    EnrollmentStatus @default(ENROLLED)
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
 
-//   // Relations
-//   user      User     @relation(fields: [userId], references: [id])
-//   course    Course   @relation(fields: [courseId], references: [id])
+// New model for tracking test attempts and results
+model TestAttempt {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  testId      Int
+  score       Float     // Final score as percentage
+  answers     Json      // Store answers as { questionId: [selectedOptionIds] }
+  startedAt   DateTime  @default(now())
+  completedAt DateTime  @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
 
-//   @@unique([userId, courseId])
-//   @@index([userId])
-//   @@index([courseId])
-// }
-
-// model Assignment {
-//   id          Int      @id @default(autoincrement())
-//   title       String
-//   description String   @db.Text
-//   dueDate     DateTime
-//   courseId    Int
-//   createdById Int
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-
-//   // Relations
-//   course      Course   @relation(fields: [courseId], references: [id])
-//   createdBy   User     @relation(fields: [createdById], references: [id])
-//   submissions Submission[]
-
-//   @@index([courseId])
-//   @@index([createdById])
-// }
-
-// model Submission {
-//   id           Int      @id @default(autoincrement())
-//   content      String   @db.Text
-//   grade        Float?
-//   assignmentId Int
-//   userId       Int
-//   createdAt    DateTime @default(now())
-//   updatedAt    DateTime @updatedAt
-
-//   // Relations
-//   assignment   Assignment @relation(fields: [assignmentId], references: [id])
-//   user        User       @relation(fields: [userId], references: [id])
-
-//   @@index([assignmentId])
-//   @@index([userId])
-// }
+  // Ensure user can only attempt a test once
+  @@unique([userId, testId])
+  @@index([userId])
+  @@index([testId])
+}
 
 enum Role {
   STUDENT
