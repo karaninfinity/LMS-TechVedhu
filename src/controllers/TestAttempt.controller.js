@@ -4,8 +4,7 @@ import prisma from "../../config/prisma.js";
 export const startTest = async (req, res) => {
   try {
     const { testId } = req.params;
-    const userId = req.user.id; // Assuming user is authenticated
-
+    const { userId } = req.body;
     // Check if user has already attempted this test
     const existingAttempt = await prisma.testAttempt.findUnique({
       where: {
@@ -79,7 +78,7 @@ export const startTest = async (req, res) => {
 export const submitTest = async (req, res) => {
   try {
     const { testId } = req.params;
-    const userId = req.user.id; // Assuming user is authenticated
+    const { userId } = req.body; // Assuming user is authenticated
     const { answers } = req.body; // { questionId: [optionIds] }
 
     // Get the test attempt
@@ -162,7 +161,7 @@ export const submitTest = async (req, res) => {
 export const getTestReport = async (req, res) => {
   try {
     const { testId } = req.params;
-    const userId = req.user.id; // Assuming user is authenticated
+    const { userId } = req.body;
 
     const attempt = await prisma.testAttempt.findUnique({
       where: {
