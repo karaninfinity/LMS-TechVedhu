@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.route.js";
 import courseRoutes from "./routes/course.routes.js";
-
+import mediaRoutes from "./routes/media.routes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -20,16 +20,29 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false, // Allow cross-origin resource sharing for media files
+  })
+);
 app.use(morgan("dev"));
 
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Serve static files with proper CORS headers
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    setHeaders: (res, path) => {
+      res.set("Cross-Origin-Resource-Policy", "cross-origin");
+      res.set("Access-Control-Allow-Origin", "*");
+    },
+  })
+);
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
-
+app.use("/api/media", mediaRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
