@@ -7,6 +7,7 @@ import {
   deleteQuestion,
   reorderQuestions,
 } from "../controllers/question.controller.js";
+import upload from "../utils/multer.js";
 
 const router = express.Router({ mergeParams: true });
 

@@ -5,11 +5,15 @@ export const getLessons = async (req, res) => {
   try {
     const { chapterId } = req.params;
 
+    const where = {
+      chapterId: parseInt(chapterId),
+    };
+
+    if (req.query.isPublished) {
+      where.isPublished = req.query.isPublished === "true";
+    }
     const lessons = await prisma.lesson.findMany({
-      where: {
-        chapterId: parseInt(chapterId),
-        isPublished: true,
-      },
+      where,
       include: {
         attachments: true,
       },
@@ -112,8 +116,19 @@ export const createLesson = async (req, res) => {
 export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content } = req.body;
-
+    const { title, content, existingAttachments } = req.body;
+    // Parse existingAttachments if it's a string (JSON)
+    const parsedAttachments = existingAttachments
+      ? typeof existingAttachments === "string"
+        ? JSON.parse(existingAttachments)
+        : existingAttachments
+      : [];
+    console.log(
+      "Is array:",
+      Array.isArray(parsedAttachments),
+      "Value:",
+      parsedAttachments
+    );
     // Handle video upload
     const videoUrl = req.files?.video?.[0]?.path?.replace("\\", "/");
 
@@ -122,21 +137,38 @@ export const updateLesson = async (req, res) => {
 
     const lesson = await prisma.lesson.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        attachments: true,
+      },
     });
 
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
+    // Delete attachments that are not in existingAttachments
+    const existingAttachmentIds = parsedAttachments.map((id) => parseInt(id));
+    const attachmentsToDelete = lesson.attachments
+      .filter((attachment) => !existingAttachmentIds.includes(attachment.id))
+      .map((attachment) => attachment.id);
+
     // Create new attachments if files are provided
     let attachments = undefined;
-    if (attachmentFiles.length > 0) {
+    if (attachmentFiles.length > 0 || attachmentsToDelete.length > 0) {
       attachments = {
         create: attachmentFiles.map((file) => ({
           name: file.originalname,
           url: file.path.replace("\\", "/"),
           type: getAttachmentType(file.mimetype),
         })),
+        deleteMany:
+          attachmentsToDelete.length > 0
+            ? {
+                id: {
+                  in: attachmentsToDelete,
+                },
+              }
+            : undefined,
       };
     }
 

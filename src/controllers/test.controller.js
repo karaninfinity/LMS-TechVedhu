@@ -4,7 +4,7 @@ import prisma from "../../config/prisma.js";
 export const getTests = async (req, res) => {
   try {
     const { chapterId } = req.params;
-
+    console.log(req.params);
     const tests = await prisma.test.findMany({
       where: {
         chapterId: parseInt(chapterId),
@@ -67,8 +67,16 @@ export const getTest = async (req, res) => {
 export const createTest = async (req, res) => {
   try {
     const { chapterId } = req.params;
-    const { title, description, timeLimit, passingScore, questions } = req.body;
-
+    const {
+      title,
+      description,
+      timeLimit,
+      passingScore,
+      questions,
+      isPublished,
+    } = req.body;
+    console.log(req.body);
+    console.log(req.params);
     // Create the test with its questions and options
     const test = await prisma.test.create({
       data: {
@@ -77,6 +85,7 @@ export const createTest = async (req, res) => {
         timeLimit: timeLimit ? parseInt(timeLimit) : null,
         passingScore: passingScore ? parseInt(passingScore) : 70,
         chapterId: parseInt(chapterId),
+        isPublished: isPublished,
         questions: {
           create: questions.map((q) => ({
             question: q.question,
@@ -115,8 +124,15 @@ export const createTest = async (req, res) => {
 export const updateTest = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, timeLimit, passingScore, questions } = req.body;
-
+    const {
+      title,
+      description,
+      timeLimit,
+      passingScore,
+      questions,
+      isPublished,
+    } = req.body;
+    console.log(req.body);
     // First, verify the test exists
     const existingTest = await prisma.test.findUnique({
       where: { id: parseInt(id) },
@@ -127,9 +143,9 @@ export const updateTest = async (req, res) => {
     }
 
     // Delete existing questions and options
-    await prisma.question.deleteMany({
-      where: { testId: parseInt(id) },
-    });
+    // await prisma.question.deleteMany({
+    //   where: { testId: parseInt(id) },
+    // });
 
     // Update the test with new questions and options
     const updatedTest = await prisma.test.update({
@@ -139,19 +155,20 @@ export const updateTest = async (req, res) => {
         description,
         timeLimit: timeLimit ? parseInt(timeLimit) : null,
         passingScore: passingScore ? parseInt(passingScore) : 70,
-        questions: {
-          create: questions.map((q) => ({
-            question: q.question,
-            type: q.type,
-            points: q.points || 1,
-            options: {
-              create: q.options.map((opt) => ({
-                content: opt.content,
-                isCorrect: opt.isCorrect,
-              })),
-            },
-          })),
-        },
+        isPublished: isPublished,
+        // questions: {
+        //   create: questions.map((q) => ({
+        //     question: q.question,
+        //     type: q.type,
+        //     points: q.points || 1,
+        //     options: {
+        //       create: q.options.map((opt) => ({
+        //         content: opt.content,
+        //         isCorrect: opt.isCorrect,
+        //       })),
+        //     },
+        //   })),
+        // },
       },
       include: {
         questions: {
