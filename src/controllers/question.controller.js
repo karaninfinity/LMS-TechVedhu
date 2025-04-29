@@ -60,7 +60,7 @@ export const createQuestion = async (req, res) => {
   try {
     const { testId } = req.params;
     const { question, type, points, options, position } = req.body;
-
+    console.log(req.body);
     // If position is provided, shift existing questions
     if (position !== undefined) {
       await prisma.question.updateMany({
@@ -99,6 +99,7 @@ export const createQuestion = async (req, res) => {
           create: options.map((opt) => ({
             content: opt.content,
             isCorrect: opt.isCorrect,
+            image: opt.image,
           })),
         },
       },
@@ -123,7 +124,7 @@ export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
     const { question, type, points, options, position } = req.body;
-
+    console.log(req.body);
     // First, verify the question exists
     const existingQuestion = await prisma.question.findUnique({
       where: { id: parseInt(id) },
@@ -188,6 +189,7 @@ export const updateQuestion = async (req, res) => {
           create: options.map((opt) => ({
             content: opt.content,
             isCorrect: opt.isCorrect,
+            image: opt.image,
           })),
         },
       },

@@ -1,14 +1,14 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+  // This is your Prisma schema file,
+  // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
+  datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+  }
 
 model User {
   id        Int      @id @default(autoincrement())
@@ -24,62 +24,62 @@ model User {
   testAttempts TestAttempt[]
 }
 
-model otp {
-  id         Int      @id @default(autoincrement())
-  email      String?  @unique
-  otp        String
-  created_at DateTime @default(now())
-  update_at  DateTime @updatedAt
-  expiry     DateTime
-}
+  model otp {
+    id         Int      @id @default(autoincrement())
+    email      String?  @unique
+    otp        String
+    created_at DateTime @default(now())
+    update_at  DateTime @updatedAt
+    expiry     DateTime
+  }
 
-model Course {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String    @db.Text
-  coverImage  String?   @db.Text
-  instructorId Int
-  isPublished Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  instructor  User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
-  chapters    Chapter[]
+  model Course {
+    id          Int       @id @default(autoincrement())
+    title       String
+    description String    @db.Text
+    coverImage  String?   @db.Text
+    instructorId Int
+    isPublished Boolean   @default(false)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    instructor  User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+    chapters    Chapter[]
 
-  @@index([instructorId])
-}
+    @@index([instructorId])
+  }
 
-model Chapter {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?   @db.Text
-  coverImage  String?   @db.Text
-  position    Int       // For ordering chapters
-  isPublished Boolean   @default(false)
-  courseId    Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons     Lesson[]
-  tests       Test[]
+  model Chapter {
+    id          Int       @id @default(autoincrement())
+    title       String
+    description String?   @db.Text
+    coverImage  String?   @db.Text
+    position    Int       // For ordering chapters
+    isPublished Boolean   @default(false)
+    courseId    Int
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    lessons     Lesson[]
+    tests       Test[]
 
-  @@index([courseId])
-}
+    @@index([courseId])
+  }
 
-model Lesson {
-  id          Int       @id @default(autoincrement())
-  title       String
-  content     String    @db.Text
-  videoUrl    String?   @db.Text
-  position    Int       @default(0)
-  isPublished Boolean   @default(false)
-  chapterId   Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  attachments Attachment[]
+  model Lesson {
+    id          Int       @id @default(autoincrement())
+    title       String
+    content     String    @db.Text
+    videoUrl    String?   @db.Text
+    position    Int       @default(0)
+    isPublished Boolean   @default(false)
+    chapterId   Int
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+    attachments Attachment[]
 
-  @@index([chapterId])
-}
+    @@index([chapterId])
+  }
 
 model Test {
   id          Int       @id @default(autoincrement())
@@ -95,34 +95,36 @@ model Test {
   questions   Question[]
   attempts    TestAttempt[]
 
-  @@index([chapterId])
-}
+    @@index([chapterId])
+  }
 
-model Question {
-  id          Int       @id @default(autoincrement())
-  question    String    @db.Text
-  type        QuestionType @default(SINGLE_CHOICE)
-  points      Int       @default(1)
-  testId      Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
-  options     Option[]
+  model Question {
+    id          Int       @id @default(autoincrement())
+    question    String    @db.Text
+    type        QuestionType @default(SINGLE_CHOICE)
+    points      Int       @default(1)
+    position    Int       @default(0)  // Added for ordering questions
+    testId      Int
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+    options     Option[]
 
-  @@index([testId])
-}
+    @@index([testId])
+  }
 
-model Option {
-  id          Int       @id @default(autoincrement())
-  content     String    @db.Text
-  isCorrect   Boolean   @default(false)
-  questionId  Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  model Option {
+    id          Int       @id @default(autoincrement())
+    content     String    @db.Text
+    isCorrect   Boolean   @default(false)
+    image       String?   @db.Text
+    questionId  Int
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@index([questionId])
-}
+    @@index([questionId])
+  }
 
 model Attachment {
   id          Int       @id @default(autoincrement())
@@ -156,32 +158,32 @@ model TestAttempt {
   @@index([testId])
 }
 
-enum Role {
-  STUDENT
-  INSTRUCTOR
-  ADMIN
-}
+  enum Role {
+    STUDENT
+    INSTRUCTOR
+    ADMIN
+  }
 
-enum Status {
-  ACTIVE
-  INACTIVE
-}
+  enum Status {
+    ACTIVE
+    INACTIVE
+  }
 
-enum QuestionType {
-  MULTIPLE_CHOICE
-  SINGLE_CHOICE
-  TRUE_FALSE
-  SHORT_ANSWER
-}
+  enum QuestionType {
+    MULTIPLE_CHOICE
+    SINGLE_CHOICE
+    TRUE_FALSE
+    SHORT_ANSWER
+  }
 
-enum AttachmentType {
-  IMAGE
-  VIDEO
-  DOCUMENT
-  LINK
-}
-// enum EnrollmentStatus {
-//   ENROLLED
-//   COMPLETED
-//   DROPPED
-// } 
+  enum AttachmentType {
+    IMAGE
+    VIDEO
+    DOCUMENT
+    LINK
+  }
+  // enum EnrollmentStatus {
+  //   ENROLLED
+  //   COMPLETED
+  //   DROPPED
+  // } 
