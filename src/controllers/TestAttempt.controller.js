@@ -80,7 +80,9 @@ export const submitTest = async (req, res) => {
     const { testId } = req.params;
     const { userId } = req.body; // Assuming user is authenticated
     const { answers } = req.body; // { questionId: [optionIds] }
-
+    console.log(answers);
+    console.log(userId);
+    console.log(testId);
     // Get the test attempt
     const attempt = await prisma.testAttempt.findUnique({
       where: {
@@ -217,6 +219,79 @@ export const getTestReport = async (req, res) => {
         };
       }),
     };
+
+    res.json({
+      success: true,
+      message: "Test report retrieved successfully",
+      data: { ...attempt, report },
+    });
+  } catch (error) {
+    console.error("Error getting test report:", error);
+    res.status(500).json({ message: "Error getting test report" });
+  }
+};
+
+export const getUserTests = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const attempt = await prisma.testAttempt.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        test: {
+          include: {
+            questions: {
+              include: {
+                options: true,
+              },
+            },
+          },
+        },
+        user: true,
+      },
+    });
+
+    if (!attempt) {
+      return res.status(404).json({
+        success: false,
+        message: "Test attempt not found",
+      });
+    }
+
+    // Format report with detailed feedback
+    const report = attempt.map((attempt) => {
+      return {
+        score: attempt.score,
+        passed: attempt.score >= attempt.test.passingScore,
+        startedAt: attempt.startedAt,
+        completedAt: attempt.completedAt,
+        test: attempt.test,
+        user: attempt.user,
+        id: attempt.id,
+        questions: attempt.test.questions.map((question) => {
+          const userAnswer = attempt.answers[question.id] || [];
+          const correctOptions = question.options
+            .filter((o) => o.isCorrect)
+            .map((o) => o.id);
+
+          return {
+            question: question.question,
+            points: question.points,
+            userAnswer: question.options
+              .filter((o) => userAnswer.includes(o.id))
+              .map((o) => o.content),
+            correctAnswer: question.options
+              .filter((o) => correctOptions.includes(o.id))
+              .map((o) => o.content),
+            isCorrect:
+              userAnswer.length === correctOptions.length &&
+              userAnswer.every((id) => correctOptions.includes(id)),
+          };
+        }),
+      };
+    });
 
     res.json({
       success: true,
