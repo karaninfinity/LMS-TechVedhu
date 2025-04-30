@@ -40,6 +40,15 @@ export const getLesson = async (req, res) => {
       where: { id: parseInt(id) },
       include: {
         attachments: true,
+        tests: {
+          include: {
+            questions: {
+              include: {
+                options: true,
+              },
+            },
+          },
+        },
       },
     });
 

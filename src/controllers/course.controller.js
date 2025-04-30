@@ -32,6 +32,15 @@ export const getCourses = async (req, res) => {
           where: { isPublished: true },
           select: { id: true, title: true },
         },
+        tests: {
+          include: {
+            questions: {
+              include: {
+                options: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -56,6 +65,15 @@ export const getCourse = async (req, res) => {
             id: true,
             firstName: true,
             lastName: true,
+          },
+        },
+        tests: {
+          include: {
+            questions: {
+              include: {
+                options: true,
+              },
+            },
           },
         },
         chapters: {
