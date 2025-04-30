@@ -75,6 +75,7 @@ export const getMyEnrollments = async (req, res) => {
         course: {
           select: {
             title: true,
+            id: true,
             description: true,
             coverImage: true,
             instructor: {
