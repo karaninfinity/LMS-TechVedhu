@@ -76,7 +76,7 @@ export const createTest = async (req, res) => {
       isPublished,
     } = req.body;
     console.log(req.body);
-    console.log(req.params);
+
     // Create the test with its questions and options
     const test = await prisma.test.create({
       data: {
