@@ -11,6 +11,7 @@ import courseRoutes from "./routes/course.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
 import testAttemptRoutes from "./routes/TestAttempt.routes.js";
 import enrollmentRoutes from "./routes/enrollment.routes.js";
+import questionRoutes from "./routes/question.routes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -47,6 +48,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/tests", testAttemptRoutes);
 app.use("/api/enroll", enrollmentRoutes);
+app.use("/api/tests/:testId/questions", questionRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
