@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.route.js";
 import courseRoutes from "./routes/course.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
+import testAttemptRoutes from "./routes/TestAttempt.routes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -43,6 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/media", mediaRoutes);
+app.use("/api/tests", testAttemptRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

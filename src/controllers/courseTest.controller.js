@@ -93,6 +93,7 @@ export const createTest = async (req, res) => {
               create: q.options.map((opt) => ({
                 content: opt.content,
                 isCorrect: opt.isCorrect,
+                image: opt.image,
               })),
             },
           })),
