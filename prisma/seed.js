@@ -250,6 +250,27 @@ async function main() {
       "Created course with chapters, lessons, and tests:",
       course.title
     );
+
+    // Create sample enrollments
+    const enrollments = await Promise.all([
+      prisma.enrollment.create({
+        data: {
+          userId: students[0].id, // Alice
+          courseId: course.id,
+          status: "ENROLLED",
+          progress: 25.0, // 25% progress
+        },
+      }),
+      prisma.enrollment.create({
+        data: {
+          userId: students[1].id, // Bob
+          courseId: course.id,
+          status: "ENROLLED",
+          progress: 15.0, // 15% progress
+        },
+      }),
+    ]);
+    console.log("Created enrollments for students:", enrollments.length);
   } catch (error) {
     console.error("Error seeding data:", error);
     process.exit(1);
