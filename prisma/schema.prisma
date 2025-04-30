@@ -44,6 +44,7 @@ model User {
     updatedAt   DateTime  @updatedAt
     instructor  User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
     chapters    Chapter[]
+    tests       Test[]
 
     @@index([instructorId])
   }
@@ -77,6 +78,7 @@ model User {
     updatedAt   DateTime  @updatedAt
     chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
     attachments Attachment[]
+    tests       Test[]
 
     @@index([chapterId])
   }
@@ -88,15 +90,21 @@ model Test {
   timeLimit   Int?      // Time limit in minutes
   passingScore Int      @default(70) // Passing score percentage
   isPublished Boolean   @default(false)
-  chapterId   Int
+  chapterId   Int?      
+  lessonId    Int?      
+  courseId    Int?      
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapter     Chapter?  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  lesson      Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course      Course?   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   questions   Question[]
   attempts    TestAttempt[]
 
-    @@index([chapterId])
-  }
+  @@index([chapterId])
+  @@index([lessonId])
+  @@index([courseId])
+}
 
   model Question {
     id          Int       @id @default(autoincrement())

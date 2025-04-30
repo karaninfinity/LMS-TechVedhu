@@ -54,14 +54,11 @@ export const getQuestion = async (req, res) => {
     res.status(500).json({ message: "Error getting question" });
   }
 };
-
-// Create a new question
 export const createQuestion = async (req, res) => {
   try {
     const { testId } = req.params;
     const { question, type, points, options, position } = req.body;
-    console.log(req.body);
-    // If position is provided, shift existing questions
+
     if (position !== undefined) {
       await prisma.question.updateMany({
         where: {
