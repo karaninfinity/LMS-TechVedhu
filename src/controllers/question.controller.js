@@ -214,8 +214,7 @@ export const reorderQuestions = async (req, res) => {
   try {
     const { testId } = req.params;
     const { questions } = req.body; // Array of { id, position }
-    console.log(questions);
-    // Update positions in a transaction
+
     await prisma.$transaction(
       questions.map(({ id, position }) =>
         prisma.question.update({
