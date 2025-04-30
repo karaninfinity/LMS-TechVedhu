@@ -10,6 +10,7 @@ import {
 } from "../controllers/course.controller.js";
 import upload from "../utils/multer.js";
 import chapterRoutes from "./chapter.routes.js";
+import courseTestRoutes from "./courseTest.routes.js";
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.get("/:id", getCourse);
 
 // Mount chapter routes
 router.use("/:courseId/chapters", chapterRoutes);
+router.use("/:courseId/tests", courseTestRoutes);
 
 // Protected routes (require authentication)
 router.use(auth);
