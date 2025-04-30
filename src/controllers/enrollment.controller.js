@@ -69,7 +69,7 @@ export const getMyEnrollments = async (req, res) => {
 
     const enrollments = await prisma.enrollment.findMany({
       where: {
-        userId: userId,
+        userId: parseInt(userId),
       },
       include: {
         course: {
