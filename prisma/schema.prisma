@@ -16,6 +16,7 @@ model User {
   password  String
   firstName String
   lastName  String
+  profileImage String?   @db.Text
   role      Role     @default(STUDENT)
   status    Status   @default(INACTIVE)
   createdAt DateTime @default(now())
