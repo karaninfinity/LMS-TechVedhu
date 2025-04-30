@@ -23,6 +23,7 @@ model User {
   updatedAt DateTime @updatedAt
   courses   Course[]
   testAttempts TestAttempt[]
+  enrollments Enrollment[]
 }
 
   model otp {
@@ -46,6 +47,7 @@ model User {
     instructor  User      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
     chapters    Chapter[]
     tests       Test[]
+    enrollments Enrollment[]
 
     @@index([instructorId])
   }
@@ -167,6 +169,25 @@ model TestAttempt {
   @@index([testId])
 }
 
+// Add new Enrollment model
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  status    EnrollmentStatus @default(ENROLLED)
+  progress  Float    @default(0) // Track course progress (0-100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // Prevent duplicate enrollments
+  @@index([userId])
+  @@index([courseId])
+}
+
   enum Role {
     STUDENT
     INSTRUCTOR
@@ -191,8 +212,9 @@ model TestAttempt {
     DOCUMENT
     LINK
   }
-  // enum EnrollmentStatus {
-  //   ENROLLED
-  //   COMPLETED
-  //   DROPPED
-  // } 
+
+enum EnrollmentStatus {
+  ENROLLED
+  COMPLETED
+  DROPPED
+} 
