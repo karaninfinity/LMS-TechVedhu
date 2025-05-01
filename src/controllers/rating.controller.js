@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 export const rateCourse = async (req, res) => {
   try {
     const { courseId, rating, review, userId } = req.body;
-
+    console.log(req.body);
     // Validate rating
     if (rating < 1 || rating > 5) {
       return res

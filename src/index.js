@@ -50,7 +50,7 @@ app.use("/api/media", mediaRoutes);
 app.use("/api/tests", testAttemptRoutes);
 app.use("/api/enroll", enrollmentRoutes);
 app.use("/api/tests/:testId/questions", questionRoutes);
-app.user("/api/ratings", ratingRoutes);
+app.use("/api/ratings", ratingRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
