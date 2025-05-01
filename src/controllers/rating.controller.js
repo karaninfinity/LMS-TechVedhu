@@ -54,7 +54,7 @@ export const rateCourse = async (req, res) => {
         review: review,
       },
       create: {
-        userId: userId,
+        userId: Number(userId),
         courseId: Number(courseId),
         rating: rating,
         review: review,
