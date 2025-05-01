@@ -112,7 +112,7 @@ export const updateEnrollmentStatus = async (req, res) => {
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
-          userId: userId,
+          userId: Number(userId),
           courseId: Number(courseId),
         },
       },
@@ -126,7 +126,7 @@ export const updateEnrollmentStatus = async (req, res) => {
     const updatedEnrollment = await prisma.enrollment.update({
       where: {
         userId_courseId: {
-          userId: userId,
+          userId: Number(userId),
           courseId: Number(courseId),
         },
       },
@@ -160,7 +160,7 @@ export const updateProgress = async (req, res) => {
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
-          userId: userId,
+          userId: Number(userId),
           courseId: Number(courseId),
         },
       },
@@ -174,7 +174,7 @@ export const updateProgress = async (req, res) => {
     const updatedEnrollment = await prisma.enrollment.update({
       where: {
         userId_courseId: {
-          userId: userId,
+          userId: Number(userId),
           courseId: Number(courseId),
         },
       },
