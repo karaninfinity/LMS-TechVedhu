@@ -1,4 +1,4 @@
-  // This is your Prisma schema file,
+// This is your Prisma schema file,
   // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
   generator client {
@@ -69,6 +69,7 @@ model User {
     course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
     lessons     Lesson[]
     tests       Test[]
+    chapterEnrollments ChapterEnrollment[]
 
     @@index([courseId])
   }
@@ -86,7 +87,7 @@ model User {
     chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
     attachments Attachment[]
     tests       Test[]
-
+    lessonEnrollments LessonEnrollment[]
     @@index([chapterId])
   }
 
@@ -186,10 +187,50 @@ model Enrollment {
   // Relations
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapterEnrollments ChapterEnrollment[]
 
   @@unique([userId, courseId]) // Prevent duplicate enrollments
   @@index([userId])
   @@index([courseId])
+}
+
+// Track chapter progress within a course
+model ChapterEnrollment {
+  id          Int      @id @default(autoincrement())
+  enrollmentId Int
+  chapterId   Int
+  status      EnrollmentStatus @default(ENROLLED)
+  progress    Float    @default(0) // Track chapter progress (0-100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  enrollment  Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  chapter     Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  lessonEnrollments LessonEnrollment[]
+
+  @@unique([enrollmentId, chapterId]) // Prevent duplicate chapter enrollments
+  @@index([enrollmentId])
+  @@index([chapterId])
+}
+
+// Track lesson progress within a chapter
+model LessonEnrollment {
+  id                Int      @id @default(autoincrement())
+  chapterEnrollmentId Int
+  lessonId          Int
+  status            EnrollmentStatus @default(ENROLLED)
+  isCompleted       Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  chapterEnrollment ChapterEnrollment @relation(fields: [chapterEnrollmentId], references: [id], onDelete: Cascade)
+  lesson            Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterEnrollmentId, lessonId]) // Prevent duplicate lesson enrollments
+  @@index([chapterEnrollmentId])
+  @@index([lessonId])
 }
 
 // Add after TestAttempt model and before enums
