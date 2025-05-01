@@ -24,6 +24,9 @@ model User {
   courses   Course[]
   testAttempts TestAttempt[]
   enrollments Enrollment[]
+  courseRatings CourseRating[]
+  receivedRatings InstructorRating[] @relation("ReceivedRatings")
+  givenRatings InstructorRating[] @relation("GivenRatings")
 }
 
   model otp {
@@ -48,6 +51,7 @@ model User {
     chapters    Chapter[]
     tests       Test[]
     enrollments Enrollment[]
+    ratings     CourseRating[]
 
     @@index([instructorId])
   }
@@ -186,6 +190,45 @@ model Enrollment {
   @@unique([userId, courseId]) // Prevent duplicate enrollments
   @@index([userId])
   @@index([courseId])
+}
+
+// Add after TestAttempt model and before enums
+model CourseRating {
+  id          Int      @id @default(autoincrement())
+  rating      Int      @db.TinyInt // 1-5 star rating
+  review      String?  @db.Text
+  courseId    Int
+  userId      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure one rating per user per course
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+model InstructorRating {
+  id           Int      @id @default(autoincrement())
+  rating       Int      @db.TinyInt // 1-5 star rating
+  review       String?  @db.Text
+  instructorId Int
+  userId       Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  instructor   User     @relation(name: "ReceivedRatings", fields: [instructorId], references: [id], onDelete: Cascade)
+  user         User     @relation(name: "GivenRatings", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure one rating per user per instructor
+  @@unique([userId, instructorId])
+  @@index([instructorId])
+  @@index([userId])
 }
 
   enum Role {
