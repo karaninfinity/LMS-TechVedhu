@@ -1,0 +1,19 @@
+No,Module,Description,Notes
+1,Login Page,Implement login and redirection based on user role and status.,Estimated time: 16h
+2,Register Page,User selects role during registration and waits for admin approval.,Estimated time: 16h
+3,Admin Panel - Manage Users,"Admin can add/edit/delete users (students, instructors), assign roles, and track user activity.",Estimated time: 24h
+4,Admin Panel - Manage Courses,"Manage course content: cover image, title, description, chapters, lessons, and tests. Assign instructors to courses.",Estimated time: 32h
+5,Admin Panel - Analytics,"Track user engagement, course progress, and completion rates with performance dashboards.",Estimated time: 8h
+6,Admin Panel - System Settings,"Configure system (logo, name, etc.), setup email/SMS notifications, manage roles & access.",Estimated time: 24h
+7,Student Panel - Dashboard,Displays enrolled courses and user notifications.,Estimated time: 16h
+8,Student Panel - Access Courses,"Stream videos (resume from last played), download resources (with restrictions), take quizzes/tests (multi-true options).",Estimated time: 40h
+9,Student Panel - Track Progress,"Show course progress, test scores, and completion percentage.",Estimated time: 8h
+10,Student Panel - Give Feedback,Submit course/instructor reviews with rating and content.,Estimated time: 16h
+11,Student Panel - Community,Discussion forums using public group chat (WebSocket-based).,Estimated time: 48h
+12,Instructor Panel - Create/Upload,Upload course material and create modules/sections.,Estimated time: 24h
+13,Instructor Panel - Course Content,"Organize course modules, edit or remove lessons.",Estimated time: 8h
+14,Instructor Panel - Assign Quizzes / Homework / Exams,"Create quizzes per chapter, set homework deadlines via links.",Estimated time: 16h
+15,Instructor Panel - View Students,View enrolled students and their participation/progress.,Estimated time: 8h
+16,Instructor Panel - Performance Monitoring,"Monitor student progress, flag students, generate reports.",Estimated time: 16h
+17,Responsive Design,Ensure full responsive support across all modules and views.,Estimated time: 40h
+18,Integrations,"Setup for video streaming APIs (Vimeo/YouTube), Firebase notifications, Google Analytics or custom tools.",No fixed estimate; depends on service.
