@@ -42,6 +42,19 @@ export const createUser = async (req, res) => {
 export const getUserById = async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: parseInt(req.params.id) },
+    include: {
+      courses: {
+        include: {
+          chapters: true,
+        },
+      },
+      testAttempts: true,
+      receivedRatings: {
+        include: {
+          user: true,
+        },
+      },
+    },
   });
   res.json({ message: "User fetched successfully", success: true, data: user });
 };
