@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { EnrollmentStatus } from "@prisma/client";
+import pkg from "@prisma/client";
+const { EnrollmentStatus } = pkg;
 
 export const enrollCourse = async (req, res) => {
   try {
