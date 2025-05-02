@@ -83,7 +83,7 @@ export const getChapter = async (req, res) => {
 export const createChapter = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { title, description } = req.body;
+    const { title, description, isPublished } = req.body;
     const coverImage = req.file ? req.file.path?.replace("\\", "/") : null;
 
     // Get the highest position in the course
@@ -99,6 +99,7 @@ export const createChapter = async (req, res) => {
     const chapter = await prisma.chapter.create({
       data: {
         title,
+        isPublished: Boolean(isPublished),
         description,
         coverImage,
         position,

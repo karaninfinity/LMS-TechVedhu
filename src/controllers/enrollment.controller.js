@@ -198,7 +198,7 @@ export const updateProgress = async (req, res) => {
 export const enrollChapter = async (req, res) => {
   try {
     const { chapterId, courseId, userId } = req.body;
-
+    console.log(chapterId, courseId, userId);
     // Check if user is enrolled in the course
     const courseEnrollment = await prisma.enrollment.findUnique({
       where: {
@@ -208,6 +208,7 @@ export const enrollChapter = async (req, res) => {
         },
       },
     });
+    console.log(courseEnrollment);
 
     if (!courseEnrollment) {
       return res.status(404).json({ message: "Course enrollment not found" });
