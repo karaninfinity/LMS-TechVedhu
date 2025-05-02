@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { EnrollmentStatus } from "@prisma/client";
+import pkg from "@prisma/client";
+const { EnrollmentStatus } = pkg;
 
 export const enrollCourse = async (req, res) => {
   try {
@@ -197,7 +198,7 @@ export const updateProgress = async (req, res) => {
 export const enrollChapter = async (req, res) => {
   try {
     const { chapterId, courseId, userId } = req.body;
-
+    console.log(chapterId, courseId, userId);
     // Check if user is enrolled in the course
     const courseEnrollment = await prisma.enrollment.findUnique({
       where: {
@@ -207,6 +208,7 @@ export const enrollChapter = async (req, res) => {
         },
       },
     });
+    console.log(courseEnrollment);
 
     if (!courseEnrollment) {
       return res.status(404).json({ message: "Course enrollment not found" });
@@ -353,7 +355,7 @@ export const enrollLesson = async (req, res) => {
 
 export const updateChapterEnrollmentStatus = async (req, res) => {
   try {
-    const { chapterId, status, userId } = req.body;
+    const { chapterId, status, userId, courseId } = req.body;
 
     // Validate status
     if (!Object.values(["ENROLLED", "COMPLETED", "DROPPED"]).includes(status)) {
@@ -364,6 +366,7 @@ export const updateChapterEnrollmentStatus = async (req, res) => {
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: Number(userId),
+        courseId: Number(courseId),
       },
     });
 
@@ -407,7 +410,7 @@ export const updateChapterEnrollmentStatus = async (req, res) => {
 
 export const updateLessonEnrollmentStatus = async (req, res) => {
   try {
-    const { lessonId, status, userId, completed } = req.body;
+    const { lessonId, status, userId, completed, courseId } = req.body;
 
     // Validate status
     if (!Object.values(["ENROLLED", "COMPLETED", "DROPPED"]).includes(status)) {
@@ -418,6 +421,7 @@ export const updateLessonEnrollmentStatus = async (req, res) => {
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: Number(userId),
+        courseId: Number(courseId),
       },
     });
 

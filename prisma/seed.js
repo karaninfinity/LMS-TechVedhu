@@ -1,10 +1,5 @@
-import {
-  PrismaClient,
-  Role,
-  Status,
-  QuestionType,
-  AttachmentType,
-} from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient, Role, Status, QuestionType, AttachmentType } = pkg;
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();

@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
-import { Role } from "@prisma/client";
+import pkg from "@prisma/client";
+const { Role } = pkg;
 
 // Course Rating Controllers
 export const rateCourse = async (req, res) => {

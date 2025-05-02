@@ -4,7 +4,8 @@ import prisma from "../../config/prisma.js";
 import { mailOptions, transporter } from "../../utils/mail.js";
 import { generateOTP } from "../../utils/helper.js";
 import moment from "moment";
-import { Role, Status } from "@prisma/client";
+import pkg from "@prisma/client";
+const { Role, Status } = pkg;
 
 export const register = async (req, res) => {
   try {
