@@ -27,6 +27,8 @@ model User {
   courseRatings CourseRating[]
   receivedRatings InstructorRating[] @relation("ReceivedRatings")
   givenRatings InstructorRating[] @relation("GivenRatings")
+  sender                messages[]           @relation("sender")
+  receiver              messages[]           @relation("receiver")
 }
 
   model otp {
@@ -272,6 +274,27 @@ model InstructorRating {
   @@index([userId])
 }
 
+model messages {
+  id           Int             @id @default(autoincrement())
+  text         String?         @db.Text
+  media_url    String?
+  media_type   MediaType?
+  message_type MessageType?    @default(TEXT)
+  sender_id    Int?
+  receiver_id  Int?
+  reply_to     Int?
+  sender       User?           @relation(fields: [sender_id], references: [id], name: "sender", onDelete: Cascade)
+  receiver     User?           @relation(fields: [receiver_id], references: [id], name: "receiver", onDelete: Cascade)
+  created_at   DateTime        @default(now())
+  reply        messages?       @relation("MessageReplies", fields: [reply_to], references: [id], onDelete: Cascade)
+  replies      messages[]      @relation("MessageReplies")
+  is_read      Boolean         @default(false)
+
+  @@index([sender_id])
+  @@index([receiver_id])
+  @@index([reply_to])
+}
+
   enum Role {
     STUDENT
     INSTRUCTOR
@@ -302,3 +325,18 @@ enum EnrollmentStatus {
   COMPLETED
   DROPPED
 } 
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  PDF
+  AUDIO
+  DOCUMENT
+}
+
+enum MessageType {
+  TEXT
+  MEDIA
+  LINK
+  PHONE
+}

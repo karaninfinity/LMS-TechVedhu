@@ -13,13 +13,102 @@ import testAttemptRoutes from "./routes/TestAttempt.routes.js";
 import enrollmentRoutes from "./routes/enrollment.routes.js";
 import questionRoutes from "./routes/question.routes.js";
 import ratingRoutes from "./routes/rating.routes.js";
-dotenv.config();
-const app = express();
-app.use(cors());
+import messageRoutes from "./routes/message.routes.js";
+import { Server } from "socket.io";
+import http from "http";
+import { MessageType } from "@prisma/client";
+import prisma from "../config/prisma.js";
 
 // Get directory name in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config();
+const app = express();
+app.use(cors());
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  socket.on("join_room", ({ id }) => {
+    console.log(`user ${id} joined room ${socket.id}`);
+    socket.join(id);
+  });
+  socket.on(
+    "send_message",
+    async ({
+      message,
+      sender_id,
+      receiver_id = null,
+      files = [],
+      reply_to = null,
+      message_type = MessageType.TEXT,
+    }) => {
+      console.log(files);
+      if (files.length > 0) {
+        files.forEach(async (file) => {
+          const response = await prisma.messages.create({
+            data: {
+              text: message,
+              sender_id: sender_id,
+              receiver_id: receiver_id,
+              message_type: MessageType.MEDIA,
+              media_url: file.path,
+              media_type: file.type,
+              reply_to: reply_to,
+            },
+            include: {
+              sender: true,
+              receiver: true,
+              reply: {
+                include: {
+                  sender: true,
+                },
+              },
+            },
+          });
+          io.emit("receive_message", response);
+        });
+        return;
+      }
+      const response = await prisma.messages.create({
+        data: {
+          text: message,
+          sender_id: sender_id,
+          receiver_id: receiver_id,
+          message_type: MessageType.TEXT,
+          reply_to: reply_to,
+        },
+        include: {
+          sender: true,
+          receiver: true,
+          reply: {
+            include: {
+              sender: true,
+            },
+          },
+        },
+      });
+      io.emit("receive_message", response);
+    }
+  );
+
+  socket.on("delete_message", async ({ message_id }) => {
+    const response = await prisma.messages.delete({
+      where: {
+        id: message_id,
+      },
+    });
+    io.emit("delete_message", response);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
 
 // Middleware
 app.use(express.json());
@@ -51,6 +140,7 @@ app.use("/api/tests", testAttemptRoutes);
 app.use("/api/enroll", enrollmentRoutes);
 app.use("/api/tests/:testId/questions", questionRoutes);
 app.use("/api/ratings", ratingRoutes);
+app.use("/api/messages", messageRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -70,6 +160,6 @@ app.get("/", (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port http://localhost:${PORT}`);
 });
