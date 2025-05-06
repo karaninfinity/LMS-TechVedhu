@@ -47,7 +47,6 @@ io.on("connection", (socket) => {
       reply_to = null,
       message_type = MessageType.TEXT,
     }) => {
-      console.log(files);
       if (files.length > 0) {
         files.forEach(async (file) => {
           const response = await prisma.messages.create({
@@ -79,7 +78,7 @@ io.on("connection", (socket) => {
           text: message,
           sender_id: sender_id,
           receiver_id: receiver_id,
-          message_type: MessageType.TEXT,
+          message_type: message_type,
           reply_to: reply_to,
         },
         include: {
