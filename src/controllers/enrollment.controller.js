@@ -272,12 +272,14 @@ export const enrollChapter = async (req, res) => {
 
 export const enrollLesson = async (req, res) => {
   try {
-    const { lessonId, chapterId, userId } = req.body;
+    const { lessonId, chapterId, userId, courseId } = req.body;
 
+    console.log(courseId, chapterId);
     // Find the enrollment first
     const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId: Number(userId),
+        ...(userId && { userId: parseInt(userId) }),
+        ...(courseId && { courseId: parseInt(courseId) }),
       },
     });
 

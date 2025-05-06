@@ -1,13 +1,18 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
+import { Status } from "@prisma/client";
 export const getUsers = async (req, res) => {
   try {
-    const { role } = req.query;
+    const { role, isActive } = req.query;
 
     const where = {};
 
     if (role) {
       where.role = role;
+    }
+
+    if (isActive === "true") {
+      where.status = Status.ACTIVE;
     }
 
     const users = await prisma.user.findMany({

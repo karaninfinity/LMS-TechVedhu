@@ -107,8 +107,9 @@ export const getCourse = async (req, res) => {
 // Create a new course
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, instructorId } = req.body;
+    const { title, description, instructorId, isPublished } = req.body;
     let coverImage = null;
+    console.log(isPublished);
 
     // Handle file upload if present
     if (req.file) {
@@ -120,6 +121,7 @@ export const createCourse = async (req, res) => {
         title,
         description,
         coverImage,
+        isPublished: isPublished === "true" ? true : false,
         instructorId: parseInt(instructorId),
       },
     });
@@ -139,8 +141,12 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
-    let updateData = { title, description };
+    const { title, description, isPublished } = req.body;
+    let updateData = {
+      title,
+      description,
+      isPublished: isPublished === "true" ? true : false,
+    };
 
     // Check if user is the course instructor
     const course = await prisma.course.findUnique({
