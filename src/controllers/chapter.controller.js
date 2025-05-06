@@ -99,7 +99,7 @@ export const createChapter = async (req, res) => {
     const chapter = await prisma.chapter.create({
       data: {
         title,
-        isPublished: Boolean(isPublished),
+        isPublished: isPublished === "true" ? true : false,
         description,
         coverImage,
         position,
@@ -122,7 +122,7 @@ export const createChapter = async (req, res) => {
 export const updateChapter = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
+    const { title, description, isPublished } = req.body;
     const coverImage = req.file ? req.file.path.replace("\\", "/") : undefined;
 
     const chapter = await prisma.chapter.findUnique({
@@ -139,6 +139,7 @@ export const updateChapter = async (req, res) => {
       data: {
         title,
         description,
+        isPublished: isPublished === "true" ? true : false,
         ...(coverImage && { coverImage }),
       },
     });

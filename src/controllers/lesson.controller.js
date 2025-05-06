@@ -71,7 +71,7 @@ export const getLesson = async (req, res) => {
 export const createLesson = async (req, res) => {
   try {
     const { chapterId } = req.params;
-    const { title, content } = req.body;
+    const { title, content, isPublished } = req.body;
 
     // Handle video upload
     const videoUrl = req.files?.video?.[0]?.path?.replace("\\", "/") || null;
@@ -104,6 +104,7 @@ export const createLesson = async (req, res) => {
             type: getAttachmentType(file.mimetype),
           })),
         },
+        isPublished: isPublished === "true" ? true : false,
       },
       include: {
         attachments: true,
@@ -125,7 +126,7 @@ export const createLesson = async (req, res) => {
 export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, existingAttachments } = req.body;
+    const { title, content, existingAttachments, isPublished } = req.body;
     // Parse existingAttachments if it's a string (JSON)
     const parsedAttachments = existingAttachments
       ? typeof existingAttachments === "string"
@@ -188,6 +189,7 @@ export const updateLesson = async (req, res) => {
         content,
         ...(videoUrl && { videoUrl }),
         ...(attachments && { attachments }),
+        isPublished: isPublished === "true" ? true : false,
       },
       include: {
         attachments: true,
