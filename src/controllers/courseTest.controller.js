@@ -4,10 +4,21 @@ import prisma from "../../config/prisma.js";
 export const getTests = async (req, res) => {
   try {
     const { courseId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const where = {
+      courseId: parseInt(courseId),
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.test.count({ where });
+
     const tests = await prisma.test.findMany({
-      where: {
-        courseId: parseInt(courseId),
-      },
+      where,
       include: {
         questions: {
           include: {
@@ -18,12 +29,20 @@ export const getTests = async (req, res) => {
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take,
     });
 
     res.json({
       success: true,
       message: "Course tests fetched successfully",
       data: tests,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error getting course tests:", error);

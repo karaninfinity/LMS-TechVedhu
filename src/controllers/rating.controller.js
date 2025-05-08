@@ -75,11 +75,35 @@ export const rateCourse = async (req, res) => {
 export const getCourseRatings = async (req, res) => {
   try {
     const { courseId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
 
+    const where = {
+      courseId: Number(courseId),
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.courseRating.count({ where });
+
+    // Get all ratings for average calculation
+    const allRatings = await prisma.courseRating.findMany({
+      where,
+      select: { rating: true },
+    });
+
+    // Calculate average rating
+    const averageRating =
+      allRatings.length > 0
+        ? allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+          allRatings.length
+        : 0;
+
+    // Get paginated ratings
     const ratings = await prisma.courseRating.findMany({
-      where: {
-        courseId: Number(courseId),
-      },
+      where,
       include: {
         user: {
           select: {
@@ -92,19 +116,21 @@ export const getCourseRatings = async (req, res) => {
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take,
     });
-
-    // Calculate average rating
-    const averageRating =
-      ratings.length > 0
-        ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length
-        : 0;
 
     res.json({
       message: "Course ratings retrieved successfully",
       averageRating: Number(averageRating.toFixed(1)),
-      totalRatings: ratings.length,
+      totalRatings: totalCount,
       ratings: ratings,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error fetching course ratings:", error);
@@ -186,11 +212,35 @@ export const rateInstructor = async (req, res) => {
 export const getInstructorRatings = async (req, res) => {
   try {
     const { instructorId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
 
+    const where = {
+      instructorId: Number(instructorId),
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.instructorRating.count({ where });
+
+    // Get all ratings for average calculation
+    const allRatings = await prisma.instructorRating.findMany({
+      where,
+      select: { rating: true },
+    });
+
+    // Calculate average rating
+    const averageRating =
+      allRatings.length > 0
+        ? allRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+          allRatings.length
+        : 0;
+
+    // Get paginated ratings
     const ratings = await prisma.instructorRating.findMany({
-      where: {
-        instructorId: Number(instructorId),
-      },
+      where,
       include: {
         user: {
           select: {
@@ -203,19 +253,21 @@ export const getInstructorRatings = async (req, res) => {
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take,
     });
-
-    // Calculate average rating
-    const averageRating =
-      ratings.length > 0
-        ? ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length
-        : 0;
 
     res.json({
       message: "Instructor ratings retrieved successfully",
       averageRating: Number(averageRating.toFixed(1)),
-      totalRatings: ratings.length,
+      totalRatings: totalCount,
       ratings: ratings,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error fetching instructor ratings:", error);

@@ -4,26 +4,50 @@ import prisma from "../../config/prisma.js";
 export const getLessons = async (req, res) => {
   try {
     const { chapterId } = req.params;
+    const { page = 1, limit = 10, search, isPublished } = req.query;
 
     const where = {
       chapterId: parseInt(chapterId),
     };
 
-    if (req.query.isPublished) {
-      where.isPublished = req.query.isPublished === "true";
+    if (search && search.length > 2) {
+      where.OR = [
+        { title: { contains: search } },
+        { content: { contains: search } },
+      ];
     }
+
+    if (isPublished != null) {
+      where.isPublished = isPublished == "true" ? true : false;
+    }
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.lesson.count({ where });
+
     const lessons = await prisma.lesson.findMany({
       where,
       include: {
         attachments: true,
       },
       orderBy: { position: "asc" },
+      skip,
+      take,
     });
 
     res.json({
       success: true,
       message: "Lessons fetched successfully",
       data: lessons,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error getting lessons:", error);

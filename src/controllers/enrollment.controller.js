@@ -67,11 +67,21 @@ export const enrollCourse = async (req, res) => {
 export const getMyEnrollments = async (req, res) => {
   try {
     const { userId } = req.query;
+    const { page = 1, limit = 10 } = req.query;
+
+    const where = {
+      userId: parseInt(userId),
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.enrollment.count({ where });
 
     const enrollments = await prisma.enrollment.findMany({
-      where: {
-        userId: parseInt(userId),
-      },
+      where,
       include: {
         course: {
           select: {
@@ -88,11 +98,19 @@ export const getMyEnrollments = async (req, res) => {
           },
         },
       },
+      skip,
+      take,
     });
 
     res.json({
       message: "Enrollments retrieved successfully",
       enrollments,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error fetching enrollments:", error);
@@ -494,6 +512,8 @@ export const updateLessonEnrollmentStatus = async (req, res) => {
 export const getChapterEnrollment = async (req, res) => {
   try {
     const { courseId, userId } = req.query;
+    const { page = 1, limit = 10 } = req.query;
+
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: parseInt(userId),
@@ -505,18 +525,35 @@ export const getChapterEnrollment = async (req, res) => {
       return res.status(404).json({ message: "Enrollment not found" });
     }
 
+    const where = {
+      enrollmentId: enrollment.id,
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.chapterEnrollment.count({ where });
+
     const chapterEnrollments = await prisma.chapterEnrollment.findMany({
-      where: {
-        enrollmentId: enrollment.id,
-      },
+      where,
       include: {
         chapter: true,
       },
+      skip,
+      take,
     });
 
     res.json({
       message: "Chapter enrollment retrieved successfully",
       chapterEnrollments,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error fetching chapter enrollment:", error);
@@ -527,6 +564,7 @@ export const getChapterEnrollment = async (req, res) => {
 export const getLessonEnrollment = async (req, res) => {
   try {
     const { lessonId, userId, courseId, chapterId } = req.query;
+    const { page = 1, limit = 10 } = req.query;
 
     const enrollwhere = {
       ...(userId && { userId: parseInt(userId) }),
@@ -552,18 +590,35 @@ export const getLessonEnrollment = async (req, res) => {
       where: chapterEnrollWhere,
     });
 
+    const where = {
+      chapterEnrollmentId: chapterEnrollment.id,
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.lessonEnrollment.count({ where });
+
     const lessonEnrollments = await prisma.lessonEnrollment.findMany({
-      where: {
-        chapterEnrollmentId: chapterEnrollment.id,
-      },
+      where,
       include: {
         lesson: true,
       },
+      skip,
+      take,
     });
 
     res.json({
       message: "Lesson enrollment retrieved successfully",
       lessonEnrollments,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error fetching lesson enrollment:", error);
