@@ -234,11 +234,21 @@ export const getTestReport = async (req, res) => {
 export const getUserTests = async (req, res) => {
   try {
     const { userId } = req.body;
+    const { page = 1, limit = 10 } = req.query;
 
-    const attempt = await prisma.testAttempt.findMany({
-      where: {
-        userId,
-      },
+    const where = {
+      userId,
+    };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.testAttempt.count({ where });
+
+    const attempts = await prisma.testAttempt.findMany({
+      where,
       include: {
         test: {
           include: {
@@ -251,17 +261,19 @@ export const getUserTests = async (req, res) => {
         },
         user: true,
       },
+      skip,
+      take,
     });
 
-    if (!attempt) {
+    if (!attempts || attempts.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Test attempt not found",
+        message: "Test attempts not found",
       });
     }
 
     // Format report with detailed feedback
-    const report = attempt.map((attempt) => {
+    const report = attempts.map((attempt) => {
       return {
         score: attempt.score,
         passed: attempt.score >= attempt.test.passingScore,
@@ -295,11 +307,17 @@ export const getUserTests = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Test report retrieved successfully",
+      message: "Test reports retrieved successfully",
       data: report,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
-    console.error("Error getting test report:", error);
-    res.status(500).json({ message: "Error getting test report" });
+    console.error("Error getting test reports:", error);
+    res.status(500).json({ message: "Error getting test reports" });
   }
 };

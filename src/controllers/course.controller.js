@@ -6,18 +6,32 @@ const prisma = new PrismaClient();
 // Get all courses (with optional filters)
 export const getCourses = async (req, res) => {
   try {
-    const { search, instructorId, isPublished } = req.query;
+    const {
+      search,
+      instructorId,
+      isPublished,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
     const where = {
-      ...(isPublished && { isPublished: true }),
-      ...(search && {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-        ],
-      }),
+      ...(isPublished && { isPublished: isPublished == "true" ? true : false }),
+      ...(search &&
+        search.length > 2 && {
+          OR: [
+            { title: { contains: search } },
+            { description: { contains: search } },
+          ],
+        }),
       ...(instructorId && { instructorId: parseInt(instructorId) }),
     };
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.course.count({ where });
 
     const courses = await prisma.course.findMany({
       where,
@@ -27,6 +41,7 @@ export const getCourses = async (req, res) => {
             id: true,
             firstName: true,
             lastName: true,
+            profileImage: true,
           },
         },
         chapters: {
@@ -44,9 +59,21 @@ export const getCourses = async (req, res) => {
         },
       },
       orderBy: { createdAt: "desc" },
+      skip,
+      take,
     });
 
-    res.json(courses);
+    res.json({
+      success: true,
+      message: "Courses fetched successfully",
+      data: courses,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
+    });
   } catch (error) {
     console.error("Error getting courses:", error);
     res.status(500).json({ message: "Error getting courses" });
@@ -66,6 +93,7 @@ export const getCourse = async (req, res) => {
             id: true,
             firstName: true,
             lastName: true,
+            profileImage: true,
           },
         },
         tests: {

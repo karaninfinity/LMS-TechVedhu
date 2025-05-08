@@ -4,14 +4,30 @@ import prisma from "../../config/prisma.js";
 export const getChapters = async (req, res) => {
   try {
     const { courseId } = req.params;
+    const { page = 1, limit = 10, search } = req.query;
 
     const where = {
       courseId: parseInt(courseId),
     };
 
-    if (req.query.isPublished) {
-      where.isPublished = req.query.isPublished === "true";
+    if (req.query.isPublished != null) {
+      where.isPublished = req.query.isPublished == "true" ? true : false;
     }
+
+    if (search && search.length > 2) {
+      where.OR = [
+        { title: { contains: search } },
+        { description: { contains: search } },
+      ];
+    }
+
+    // Calculate pagination parameters
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.chapter.count({ where });
+
     const chapters = await prisma.chapter.findMany({
       where,
       include: {
@@ -23,12 +39,20 @@ export const getChapters = async (req, res) => {
         },
       },
       orderBy: { position: "asc" },
+      skip,
+      take,
     });
 
     res.json({
       success: true,
       message: "Chapter fetched successfully",
       data: chapters,
+      pagination: {
+        total: totalCount,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(totalCount / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error("Error getting chapters:", error);
