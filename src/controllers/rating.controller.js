@@ -101,6 +101,12 @@ export const getCourseRatings = async (req, res) => {
           allRatings.length
         : 0;
 
+    // Calculate star distribution
+    const starCounts = [5, 4, 3, 2, 1].map((star) => {
+      const count = allRatings.filter((r) => r.rating === star).length;
+      return { star, count };
+    });
+
     // Get paginated ratings
     const ratings = await prisma.courseRating.findMany({
       where,
@@ -124,6 +130,7 @@ export const getCourseRatings = async (req, res) => {
       message: "Course ratings retrieved successfully",
       averageRating: Number(averageRating.toFixed(1)),
       totalRatings: totalCount,
+      totalstarratings: starCounts,
       ratings: ratings,
       pagination: {
         total: totalCount,
