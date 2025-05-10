@@ -88,6 +88,17 @@ export const getChapter = async (req, res) => {
       },
     });
 
+    const nextposition = chapter.position + 1;
+
+    const nextChapterId = await prisma.chapter.findFirst({
+      where: {
+        position: nextposition,
+      },
+      select: {
+        id: true,
+      },
+    });
+
     if (!chapter) {
       return res.status(404).json({ message: "Chapter not found" });
     }
@@ -95,7 +106,10 @@ export const getChapter = async (req, res) => {
     res.json({
       success: true,
       message: "Chapter fetched successfully",
-      data: chapter,
+      data: {
+        ...chapter,
+        nextChapterId: nextChapterId ? nextChapterId.id : null,
+      },
     });
   } catch (error) {
     console.error("Error getting chapter:", error);
