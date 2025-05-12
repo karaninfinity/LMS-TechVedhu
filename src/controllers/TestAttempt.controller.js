@@ -210,12 +210,20 @@ export const getTestReport = async (req, res) => {
           userAnswer: question.options
             .filter((o) => userAnswer.includes(o.id))
             .map((o) => o.content),
+          userAnswerOptionIds: userAnswer,
           correctAnswer: question.options
             .filter((o) => correctOptions.includes(o.id))
             .map((o) => o.content),
+          correctOptionIds: correctOptions,
           isCorrect:
             userAnswer.length === correctOptions.length &&
             userAnswer.every((id) => correctOptions.includes(id)),
+          options: question.options.map((option) => ({
+            id: option.id,
+            content: option.content,
+            isCorrect: option.isCorrect,
+            isSelected: userAnswer.includes(option.id),
+          })),
         };
       }),
     };
@@ -297,9 +305,17 @@ export const getUserTests = async (req, res) => {
             correctAnswer: question.options
               .filter((o) => correctOptions.includes(o.id))
               .map((o) => o.content),
+            correctOptionIds: correctOptions,
+            userAnswerOptionIds: userAnswer,
             isCorrect:
               userAnswer.length === correctOptions.length &&
               userAnswer.every((id) => correctOptions.includes(id)),
+            options: question.options.map((option) => ({
+              id: option.id,
+              content: option.content,
+              isCorrect: option.isCorrect,
+              isSelected: userAnswer.includes(option.id),
+            })),
           };
         }),
       };

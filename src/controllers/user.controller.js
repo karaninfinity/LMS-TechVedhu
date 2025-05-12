@@ -83,8 +83,15 @@ export const getUserById = async (req, res) => {
     where: { id: parseInt(req.params.id) },
     include: {
       courses: {
+        where: {
+          isPublished: true,
+        },
         include: {
-          chapters: true,
+          chapters: {
+            where: {
+              isPublished: true,
+            },
+          },
         },
       },
       testAttempts: true,

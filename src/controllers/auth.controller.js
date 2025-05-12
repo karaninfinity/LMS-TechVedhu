@@ -84,7 +84,7 @@ export const login = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       {
-        userId: user.id,
+        id: user.id,
         role: user.role,
         profileImage: user.profileImage,
         username: user.firstName + " " + user.lastName,
@@ -112,6 +112,17 @@ export const login = async (req, res) => {
 
 export const sendOTP = async (req, res) => {
   const { email } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: { email: email },
+    select: {
+      email: true,
+    },
+  });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
   const otp = generateOTP();
   const expiry = moment().add(10, "minutes").toDate();
   try {
