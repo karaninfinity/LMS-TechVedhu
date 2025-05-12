@@ -93,6 +93,7 @@ export const getChapter = async (req, res) => {
     const nextChapterId = await prisma.chapter.findFirst({
       where: {
         position: nextposition,
+        courseId: chapter.courseId,
       },
       select: {
         id: true,

@@ -151,7 +151,9 @@ export const updateEnrollmentStatus = async (req, res) => {
       },
       data: {
         status: status,
-        progress: status === EnrollmentStatus.COMPLETED ? 100 : 0,
+        ...(status === EnrollmentStatus.COMPLETED && {
+          progress: 100,
+        }),
       },
     });
 
@@ -168,23 +170,23 @@ export const updateEnrollmentStatus = async (req, res) => {
 export const updateProgress = async (req, res) => {
   try {
     const { courseId, progress, userId } = req.body;
-
+    console.log(courseId, progress, userId);
     // Validate progress
-    if (progress < 0 || progress > 100) {
+    if (Number(progress) < 0 || Number(progress) > 100) {
       return res
         .status(400)
         .json({ message: "Progress must be between 0 and 100" });
     }
 
     // Check if enrollment exists
-    const enrollment = await prisma.enrollment.findUnique({
+    const enrollment = await prisma.enrollment.findFirst({
       where: {
-        userId_courseId: {
-          userId: Number(userId),
-          courseId: Number(courseId),
-        },
+        userId: Number(userId),
+        courseId: Number(courseId),
       },
     });
+
+    console.log(enrollment);
 
     if (!enrollment) {
       return res.status(404).json({ message: "Enrollment not found" });
@@ -202,13 +204,13 @@ export const updateProgress = async (req, res) => {
         progress: Number(progress),
       },
     });
-
+    console.log(updatedEnrollment);
     res.json({
       message: "Progress updated successfully",
       enrollment: updatedEnrollment,
     });
   } catch (error) {
-    console.error("Error updating progress:", error);
+    console.log("Error updating progress:", error);
     res.status(500).json({ message: "Error updating progress" });
   }
 };
