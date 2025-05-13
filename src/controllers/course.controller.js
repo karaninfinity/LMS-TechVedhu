@@ -97,6 +97,9 @@ export const getCourse = async (req, res) => {
           },
         },
         tests: {
+          where: {
+            isPublished: true,
+          },
           include: {
             questions: {
               include: {
