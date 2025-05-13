@@ -242,15 +242,10 @@ export const getTestReport = async (req, res) => {
 export const getUserTests = async (req, res) => {
   try {
     const { userId } = req.body;
-    const { page = 1, limit = 10 } = req.query;
 
     const where = {
       userId,
     };
-
-    // Calculate pagination parameters
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const take = parseInt(limit);
 
     // Get total count for pagination metadata
     const totalCount = await prisma.testAttempt.count({ where });
@@ -269,8 +264,9 @@ export const getUserTests = async (req, res) => {
         },
         user: true,
       },
-      skip,
-      take,
+      orderBy: {
+        startedAt: "desc",
+      },
     });
 
     if (!attempts || attempts.length === 0) {
@@ -325,12 +321,6 @@ export const getUserTests = async (req, res) => {
       success: true,
       message: "Test reports retrieved successfully",
       data: report,
-      pagination: {
-        total: totalCount,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(totalCount / parseInt(limit)),
-      },
     });
   } catch (error) {
     console.error("Error getting test reports:", error);
