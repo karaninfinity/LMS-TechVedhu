@@ -75,7 +75,7 @@ export const rateCourse = async (req, res) => {
 export const getCourseRatings = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, userId } = req.query;
 
     const where = {
       courseId: Number(courseId),
@@ -107,24 +107,80 @@ export const getCourseRatings = async (req, res) => {
       return { star, count };
     });
 
-    // Get paginated ratings
-    const ratings = await prisma.courseRating.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            profileImage: true,
+    let ratings = [];
+
+    if (userId && parseInt(page) === 1) {
+      // Find the user's rating if it exists
+      const userRating = await prisma.courseRating.findUnique({
+        where: {
+          userId_courseId: {
+            userId: Number(userId),
+            courseId: Number(courseId),
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take,
-    });
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+      });
+
+      // Get all other ratings for the first page
+      const otherRatings = await prisma.courseRating.findMany({
+        where: {
+          courseId: Number(courseId),
+          userId: { not: Number(userId) },
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: userRating ? take - 1 : take, // Take one less if user rating exists
+      });
+
+      // Combine user rating (if exists) with other ratings
+      ratings = userRating ? [userRating, ...otherRatings] : otherRatings;
+    } else {
+      // For other pages or when userId is not provided, use regular pagination
+      ratings = await prisma.courseRating.findMany({
+        where:
+          userId && parseInt(page) !== 1
+            ? {
+                ...where,
+                userId: { not: Number(userId) },
+              }
+            : where,
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip:
+          userId && parseInt(page) > 1
+            ? skip - 1 // Adjust skip to account for the user rating on first page
+            : skip,
+        take,
+      });
+    }
 
     res.json({
       message: "Course ratings retrieved successfully",
@@ -219,7 +275,7 @@ export const rateInstructor = async (req, res) => {
 export const getInstructorRatings = async (req, res) => {
   try {
     const { instructorId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, userId } = req.query;
 
     const where = {
       instructorId: Number(instructorId),
@@ -245,29 +301,92 @@ export const getInstructorRatings = async (req, res) => {
           allRatings.length
         : 0;
 
-    // Get paginated ratings
-    const ratings = await prisma.instructorRating.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            profileImage: true,
+    // Calculate star distribution
+    const starCounts = [5, 4, 3, 2, 1].map((star) => {
+      const count = allRatings.filter((r) => r.rating === star).length;
+      return { star, count };
+    });
+
+    let ratings = [];
+
+    if (userId && parseInt(page) === 1) {
+      // Find the user's rating if it exists
+      const userRating = await prisma.instructorRating.findUnique({
+        where: {
+          userId_instructorId: {
+            userId: Number(userId),
+            instructorId: Number(instructorId),
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take,
-    });
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+      });
+
+      // Get all other ratings for the first page
+      const otherRatings = await prisma.instructorRating.findMany({
+        where: {
+          instructorId: Number(instructorId),
+          userId: { not: Number(userId) },
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: userRating ? take - 1 : take, // Take one less if user rating exists
+      });
+
+      // Combine user rating (if exists) with other ratings
+      ratings = userRating ? [userRating, ...otherRatings] : otherRatings;
+    } else {
+      // For other pages or when userId is not provided, use regular pagination
+      ratings = await prisma.instructorRating.findMany({
+        where:
+          userId && parseInt(page) !== 1
+            ? {
+                ...where,
+                userId: { not: Number(userId) },
+              }
+            : where,
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip:
+          userId && parseInt(page) > 1
+            ? skip - 1 // Adjust skip to account for the user rating on first page
+            : skip,
+        take,
+      });
+    }
 
     res.json({
       message: "Instructor ratings retrieved successfully",
       averageRating: Number(averageRating.toFixed(1)),
       totalRatings: totalCount,
+      totalstarratings: starCounts,
       ratings: ratings,
       pagination: {
         total: totalCount,
@@ -279,5 +398,43 @@ export const getInstructorRatings = async (req, res) => {
   } catch (error) {
     console.error("Error fetching instructor ratings:", error);
     res.status(500).json({ message: "Error fetching instructor ratings" });
+  }
+};
+
+// Get User Ratings
+export const getUserRatings = async (req, res) => {
+  try {
+    const { userId, type } = req.query;
+    const { courseId, instructorId } = req.params;
+    const where = {
+      userId: Number(userId),
+      ...(courseId && { courseId: Number(courseId) }),
+      ...(instructorId && { instructorId: Number(instructorId) }),
+    };
+
+    let ratings;
+
+    if (type === "course") {
+      ratings = await prisma.courseRating.findMany({
+        where,
+        include: {
+          user: true,
+        },
+      });
+    } else if (type === "instructor") {
+      ratings = await prisma.instructorRating.findMany({
+        where,
+        include: {
+          user: true,
+        },
+      });
+    }
+
+    res.json({
+      message: "User ratings retrieved successfully",
+      ratings,
+    });
+  } catch (error) {
+    console.error("Error fetching user ratings:", error);
   }
 };
