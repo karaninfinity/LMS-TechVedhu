@@ -18,6 +18,7 @@ import { Server } from "socket.io";
 import http from "http";
 import { MessageType } from "@prisma/client";
 import prisma from "../config/prisma.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 // Get directory name in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -140,6 +141,7 @@ app.use("/api/enroll", enrollmentRoutes);
 app.use("/api/tests/:testId/questions", questionRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
