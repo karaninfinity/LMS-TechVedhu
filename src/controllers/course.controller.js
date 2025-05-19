@@ -46,7 +46,16 @@ export const getCourses = async (req, res) => {
         },
         chapters: {
           where: { isPublished: true },
-          select: { id: true, title: true },
+          select: {
+            id: true,
+            title: true,
+            lessons: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
         },
         tests: {
           include: {
