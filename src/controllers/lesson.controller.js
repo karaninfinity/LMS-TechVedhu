@@ -151,6 +151,7 @@ export const updateLesson = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, existingAttachments, isPublished } = req.body;
+    console.log(req.body);
     // Parse existingAttachments if it's a string (JSON)
     const parsedAttachments = existingAttachments
       ? typeof existingAttachments === "string"

@@ -302,9 +302,15 @@ export const reorderChapters = async (req, res) => {
       });
     }
 
+    // Reorder lessons
+    const updatedChapters = await prisma.chapter.findMany({
+      where: { courseId: parseInt(courseId) },
+      orderBy: { position: "asc" },
+    });
     res.json({
       success: true,
       message: "Chapters reordered successfully",
+      data: updatedChapters,
     });
   } catch (error) {
     console.error("Error reordering chapters:", error);
