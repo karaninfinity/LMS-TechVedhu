@@ -6,6 +6,7 @@ import {
   updateUser,
   deleteUser,
   updateUserStatus,
+  getInstructorAnalytics,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -21,5 +22,8 @@ router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 
 router.put("/:id/status", updateUserStatus);
+
+// Instructor analytics
+router.get("/:instructorId/analytics", getInstructorAnalytics);
 
 export default router;

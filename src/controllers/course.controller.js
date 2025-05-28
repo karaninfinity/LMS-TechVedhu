@@ -66,7 +66,18 @@ export const getCourses = async (req, res) => {
             },
           },
         },
+        ratings: {
+          select: {
+            rating: true,
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+          },
+        },
       },
+
       orderBy: { createdAt: "desc" },
       skip,
       take,
