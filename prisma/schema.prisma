@@ -295,6 +295,14 @@ model messages {
   @@index([reply_to])
 }
 
+model Config{
+  id Int @id @default(autoincrement())
+  key String @unique
+  value String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
   enum Role {
     STUDENT
     INSTRUCTOR
