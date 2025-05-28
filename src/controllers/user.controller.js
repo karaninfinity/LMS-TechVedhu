@@ -3,9 +3,16 @@ import bcrypt from "bcryptjs";
 import { Status } from "@prisma/client";
 export const getUsers = async (req, res) => {
   try {
-    const { role, isActive, page = 1, limit = 10, search } = req.query;
-
+    const {
+      role,
+      isActive,
+      page = 1,
+      limit = 10,
+      search,
+      instructorId,
+    } = req.query;
     const where = {};
+    const include = {};
 
     if (role) {
       where.role = role;
@@ -31,6 +38,31 @@ export const getUsers = async (req, res) => {
       where.status = isActive == "true" ? Status.ACTIVE : Status.INACTIVE;
     }
 
+    if (instructorId) {
+      where.enrollments = {
+        some: {
+          course: {
+            instructorId: parseInt(instructorId),
+          },
+        },
+      };
+      include.enrollments = {
+        select: {
+          course: {
+            select: {
+              title: true,
+            },
+          },
+          progress: true,
+        },
+      };
+      include.enrollments.where = {
+        course: {
+          instructorId: parseInt(instructorId),
+        },
+      };
+    }
+
     // Calculate pagination parameters
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
@@ -43,6 +75,7 @@ export const getUsers = async (req, res) => {
       where,
       skip,
       take,
+      include,
     });
 
     res.json({
@@ -140,4 +173,120 @@ export const updateUserStatus = async (req, res) => {
     success: true,
     data: user,
   });
+};
+
+export const getInstructorAnalytics = async (req, res) => {
+  try {
+    const { instructorId } = req.params;
+
+    // Verify the instructor exists
+    const instructor = await prisma.user.findUnique({
+      where: { id: parseInt(instructorId) },
+    });
+
+    if (!instructor) {
+      return res.status(404).json({
+        success: false,
+        message: "Instructor not found",
+      });
+    }
+
+    // Get all courses by this instructor
+    const courses = await prisma.course.findMany({
+      where: { instructorId: parseInt(instructorId) },
+      include: {
+        _count: {
+          select: {
+            enrollments: true,
+            chapters: true,
+            tests: true,
+          },
+        },
+        ratings: {
+          select: {
+            rating: true,
+          },
+        },
+      },
+    });
+
+    // Calculate analytics
+    const totalCourses = courses.length;
+    const publishedCourses = courses.filter(
+      (course) => course.isPublished
+    ).length;
+    const unpublishedCourses = totalCourses - publishedCourses;
+
+    // Calculate total enrollments
+    const totalEnrollments = courses.reduce(
+      (sum, course) => sum + course._count.enrollments,
+      0
+    );
+
+    // Calculate average rating
+    let totalRatingSum = 0;
+    let ratingCount = 0;
+
+    courses.forEach((course) => {
+      course.ratings.forEach((rating) => {
+        totalRatingSum += rating.rating;
+        ratingCount++;
+      });
+    });
+
+    const averageRating =
+      ratingCount > 0 ? (totalRatingSum / ratingCount).toFixed(1) : 0;
+
+    // Get top courses by enrollment
+    const topCourses = [...courses]
+      .sort((a, b) => b._count.enrollments - a._count.enrollments)
+      .slice(0, 5)
+      .map((course) => ({
+        id: course.id,
+        title: course.title,
+        enrollments: course._count.enrollments,
+        rating:
+          course.ratings.length > 0
+            ? (
+                course.ratings.reduce((sum, r) => sum + r.rating, 0) /
+                course.ratings.length
+              ).toFixed(1)
+            : 0,
+      }));
+
+    // Total content metrics
+    const totalChapters = courses.reduce(
+      (sum, course) => sum + course._count.chapters,
+      0
+    );
+    const totalTests = courses.reduce(
+      (sum, course) => sum + course._count.tests,
+      0
+    );
+
+    const analyticsData = {
+      totalCourses,
+      publishedCourses,
+      unpublishedCourses,
+      totalEnrollments,
+      averageRating,
+      topCourses,
+      contentMetrics: {
+        totalChapters,
+        totalTests,
+      },
+    };
+
+    res.json({
+      success: true,
+      message: "Instructor analytics retrieved successfully",
+      data: analyticsData,
+    });
+  } catch (error) {
+    console.error("Error getting instructor analytics:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving analytics data",
+    });
+  }
 };
