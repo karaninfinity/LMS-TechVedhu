@@ -254,7 +254,6 @@ export const getInstructorAnalytics = async (req, res) => {
             : 0,
       }));
 
-    // Total content metrics
     const totalChapters = courses.reduce(
       (sum, course) => sum + course._count.chapters,
       0
