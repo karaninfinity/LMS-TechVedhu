@@ -14,6 +14,7 @@ import enrollmentRoutes from "./routes/enrollment.routes.js";
 import questionRoutes from "./routes/question.routes.js";
 import ratingRoutes from "./routes/rating.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import configRoutes from "./routes/config.routes.js";
 import { Server } from "socket.io";
 import http from "http";
 import { MessageType } from "@prisma/client";
@@ -142,6 +143,7 @@ app.use("/api/tests/:testId/questions", questionRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/configs", configRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

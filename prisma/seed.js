@@ -1,6 +1,7 @@
 import pkg from "@prisma/client";
 const { PrismaClient, Role, Status, QuestionType, AttachmentType } = pkg;
 import bcrypt from "bcryptjs";
+import { seedConfigs } from "./config-seed.js";
 
 const prisma = new PrismaClient();
 
@@ -266,8 +267,11 @@ async function main() {
       }),
     ]);
     console.log("Created enrollments for students:", enrollments.length);
+
+    // Seed configurations
+    await seedConfigs();
   } catch (error) {
-    console.error("Error seeding data:", error);
+    console.error("Seeding error:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();
