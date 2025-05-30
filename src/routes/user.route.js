@@ -7,6 +7,7 @@ import {
   deleteUser,
   updateUserStatus,
   getInstructorAnalytics,
+  getUsersCSV,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -25,5 +26,7 @@ router.put("/:id/status", updateUserStatus);
 
 // Instructor analytics
 router.get("/:instructorId/analytics", getInstructorAnalytics);
+
+router.post("/csv", getUsersCSV);
 
 export default router;

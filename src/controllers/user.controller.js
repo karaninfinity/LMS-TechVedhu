@@ -1,6 +1,9 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
 import { Status } from "@prisma/client";
+import ExcelJS from "exceljs";
+import path from "path";
+import fs from "fs";
 export const getUsers = async (req, res) => {
   try {
     const {
@@ -286,6 +289,122 @@ export const getInstructorAnalytics = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error retrieving analytics data",
+    });
+  }
+};
+
+export const getUsersCSV = async (req, res) => {
+  const { role, isActive, search, instructorId } = req.body;
+  const where = {};
+  const include = {};
+  try {
+    if (role) {
+      where.role = role;
+    }
+
+    if (search && search.length > 2) {
+      // MySQL doesn't support 'insensitive' mode with Prisma
+      // The search is not working because MySQL requires different syntax
+      where.OR = [
+        { firstName: { contains: search } },
+        { lastName: { contains: search } },
+        { email: { contains: search } },
+        {
+          AND: [
+            { firstName: { contains: search.split(" ")[0] || "" } },
+            { lastName: { contains: search.split(" ")[1] || "" } },
+          ],
+        },
+      ];
+    }
+
+    if (isActive) {
+      where.status = isActive ? Status.ACTIVE : Status.INACTIVE;
+    }
+
+    if (instructorId) {
+      where.enrollments = {
+        some: {
+          course: {
+            instructorId: parseInt(instructorId),
+          },
+        },
+      };
+      include.enrollments = {
+        select: {
+          course: {
+            select: {
+              title: true,
+            },
+          },
+          progress: true,
+        },
+      };
+      include.enrollments.where = {
+        course: {
+          instructorId: parseInt(instructorId),
+        },
+      };
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      include,
+    });
+
+    // console.log(users);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Users");
+
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Name", key: "name", width: 30 },
+      { header: "Role", key: "role", width: 10 },
+      { header: "Status", key: "status", width: 10 },
+    ];
+
+    users.forEach((user) => {
+      worksheet.addRow([
+        user.id,
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        user.role,
+        user.status,
+      ]);
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+
+    const uploadDir = path.join(process.cwd(), "uploads", "sheets");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const fileName = `users-${Date.now()}.xlsx`;
+    const filePath = path.join(uploadDir, fileName);
+    await workbook.xlsx.writeFile(filePath);
+
+    res.json({
+      success: true,
+      message: "Users CSV generated successfully",
+      data: {
+        success: true,
+        message: "Users CSV generated successfully",
+        data: {
+          name: fileName,
+          path: `${req.protocol}://${req.get(
+            "host"
+          )}/uploads/sheets/${fileName}`,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error generating CSV:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating CSV",
     });
   }
 };
