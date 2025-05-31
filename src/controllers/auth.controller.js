@@ -48,6 +48,188 @@ export const register = async (req, res) => {
       { expiresIn: "24h" }
     );
     user.token = token;
+
+    try {
+      const admin = await prisma.user.findFirst({
+        where: {
+          role: Role.ADMIN,
+        },
+      });
+
+      // Different content based on user role
+      let roleSpecificContent = "";
+      let headerColor = "";
+      let headerTitle = "";
+
+      if (role === Role.INSTRUCTOR) {
+        headerColor = "#1554a4"; // Green for instructors
+        headerTitle = "Welcome to Our Instructor Community";
+        roleSpecificContent = `
+          <p style="font-size: 16px; line-height: 1.5; color: #333;">
+            As an instructor, you now have the ability to:
+          </p>
+          <ul style="font-size: 16px; line-height: 1.5; color: #333;">
+            <li>Create and publish engaging courses</li>
+            <li>Manage chapters, lessons, and tests</li>
+            <li>Interact with your students</li>
+            <li>Track student progress and performance</li>
+            <li>Receive ratings and feedback</li>
+          </ul>
+          <p style="font-size: 16px; line-height: 1.5; color: #333;">
+            Our platform provides you with all the tools you need to deliver high-quality education.
+            You can start by creating your first course and building your teaching portfolio.
+          </p>
+          <div style="background-color: #e8f5e9; border-left: 4px solid #2e7d32; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px; color: #333;">
+              <strong>Quick Tip:</strong> Make sure to complete your instructor profile to build credibility with potential students.
+            </p>
+          </div>
+        `;
+      } else {
+        // Default student content
+        headerColor = "#1554a4"; // Blue for students
+        headerTitle = "Welcome to Learning Management System";
+        roleSpecificContent = `
+          <p style="font-size: 16px; line-height: 1.5; color: #333;">
+            With your new student account, you can:
+          </p>
+          <ul style="font-size: 16px; line-height: 1.5; color: #333;">
+            <li>Browse and enroll in a wide range of courses</li>
+            <li>Track your learning progress</li>
+            <li>Take tests and assessments</li>
+            <li>Interact with instructors and other students</li>
+          </ul>
+          <p style="font-size: 16px; line-height: 1.5; color: #333;">
+            We recommend starting by exploring our featured courses and enrolling in one that matches your interests.
+          </p>
+          <div style="background-color: #e3f2fd; border-left: 4px solid #1554a4; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px; color: #333;">
+              <strong>Quick Tip:</strong> Set a learning schedule to make steady progress in your courses.
+            </p>
+          </div>
+        `;
+      }
+
+      await transporter.sendMail({
+        ...mailOptions,
+        to: email,
+        subject: `Welcome to Learning Management System${
+          role === Role.INSTRUCTOR ? " as an Instructor" : ""
+        }`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="background-color: ${headerColor}; padding: 15px; border-radius: 5px 5px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 24px; text-align: center;">${headerTitle}</h1>
+            </div>
+            <div style="padding: 20px;">
+              <p style="font-size: 16px; line-height: 1.5; color: #333;">
+                Dear ${firstName} ${lastName},
+              </p>
+              <p style="font-size: 16px; line-height: 1.5; color: #333;">
+                Welcome to our Learning Management System! We're excited to have you join our community${
+                  role === Role.INSTRUCTOR ? " of educators" : " of learners"
+                }.
+              </p>
+              
+              ${roleSpecificContent}
+              
+              <p style="font-size: 16px; line-height: 1.5; color: #333;">
+                Get started by logging in to your account using your email: <strong>${email}</strong>
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #666; margin-top: 30px; text-align: center;">
+                If you have any questions, please don't hesitate to contact our support team.
+              </p>
+            </div>
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 0 0 5px 5px; text-align: center;">
+              <p style="font-size: 12px; color: #666; margin: 0;">
+                © ${moment().year()} Learning Management System. All rights reserved.
+              </p>
+            </div>
+          </div>
+        `,
+      });
+
+      await transporter.sendMail({
+        ...mailOptions,
+        to: admin.email,
+        subject: `New ${
+          role === Role.INSTRUCTOR ? "Instructor" : "Student"
+        } Joined`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="background-color: ${
+              role === Role.INSTRUCTOR ? "#2e7d32" : "#1554a4"
+            }; padding: 15px; border-radius: 5px 5px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">New ${
+                role === Role.INSTRUCTOR ? "Instructor" : "Student"
+              } Registration</h1>
+            </div>
+            <div style="padding: 20px; background-color: #f9f9f9;">
+              <p style="font-size: 16px; line-height: 1.5; color: #333;">Hello Admin,</p>
+              <p style="font-size: 16px; line-height: 1.5; color: #333;">
+                A new ${
+                  role === Role.INSTRUCTOR ? "instructor" : "student"
+                } has just registered on the Learning Management System.
+              </p>
+              
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background-color: white; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <tr style="background-color: ${
+                  role === Role.INSTRUCTOR ? "#e8f5e9" : "#e3f2fd"
+                };">
+                  <th style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">Field</th>
+                  <th style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">Value</th>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">Name</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">${firstName} ${lastName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">Email</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">${email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">Role</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">${role}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">Registration Date</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">${moment().format(
+                    "MMMM Do YYYY, h:mm:ss a"
+                  )}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">Status</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">INACTIVE (Pending Activation)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-weight: bold;">User ID</td>
+                  <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd;">${
+                    user.id
+                  }</td>
+                </tr>
+              </table>
+
+              <div style="background-color: ${
+                role === Role.INSTRUCTOR ? "#e8f5e9" : "#e3f2fd"
+              }; border-left: 4px solid ${
+          role === Role.INSTRUCTOR ? "#2e7d32" : "#1554a4"
+        }; margin: 20px 0; padding: 15px;">
+                <p style="margin: 0; font-size: 16px; color: #333;">
+                  <strong>Action Required:</strong> Please review and activate this account from the admin dashboard.
+                </p>
+              </div>
+            </div>
+            <div style="padding: 15px; text-align: center; background-color: #f1f1f1; border-radius: 0 0 5px 5px;">
+              <p style="margin: 0; font-size: 14px; color: #777;">
+                © ${moment().year()} Learning Management System. All rights reserved.
+              </p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+    }
     res.status(201).json({
       message: "User created successfully",
       user,
