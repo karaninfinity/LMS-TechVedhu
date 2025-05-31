@@ -79,6 +79,9 @@ export const getUsers = async (req, res) => {
       skip,
       take,
       include,
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     res.json({

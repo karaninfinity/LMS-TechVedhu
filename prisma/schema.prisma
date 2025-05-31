@@ -303,6 +303,26 @@ model Config{
   updatedAt DateTime @updatedAt
 }
 
+// Add after Config model and before enums
+model ContactSubmission {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String
+  phoneNumber String?
+  message     String   @db.Text
+  status      ContactStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ContactStatus {
+  PENDING
+  REVIEWED
+  RESPONDED
+  ARCHIVED
+}
+
   enum Role {
     STUDENT
     INSTRUCTOR
