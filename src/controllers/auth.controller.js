@@ -117,6 +117,8 @@ export const sendOTP = async (req, res) => {
     where: { email: email },
     select: {
       email: true,
+      firstName: true,
+      lastName: true,
     },
   });
   if (!user) {
@@ -143,8 +145,39 @@ export const sendOTP = async (req, res) => {
     await transporter.sendMail({
       ...mailOptions,
       to: email,
-      subject: "OTP for LMS",
-      text: `Your OTP is ${response.otp}`,
+      subject: "Your OTP Verification Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <div style="background-color: #4a7aff; padding: 15px; border-radius: 5px 5px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">OTP Verification</h1>
+          </div>
+          <div style="padding: 20px; background-color: #f9f9f9;">
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">Hello ${
+              user.firstName || ""
+            } ${user.lastName || ""},</p>
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">
+              You requested a one-time password (OTP) for your Learning Management System account. 
+              Please use the code below to complete your verification:
+            </p>
+            <div style="background-color: #e8f0fe; border: 1px dashed #4a7aff; margin: 20px 0; padding: 15px; text-align: center;">
+              <p style="font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 0; color: #4a7aff;">
+                ${response.otp}
+              </p>
+            </div>
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">
+              This code will expire in 10 minutes. If you did not request this OTP, please ignore this email or contact support.
+            </p>
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">
+              Thank you<br>
+            </p>
+          </div>
+          <div style="padding: 15px; text-align: center; background-color: #f1f1f1; border-radius: 0 0 5px 5px;">
+            <p style="margin: 0; font-size: 14px; color: #777;">
+              &copy; ${moment().year()} Learning Management System. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `,
     });
     res.json({ message: "OTP sent to email", otp: response.otp });
   } catch (error) {

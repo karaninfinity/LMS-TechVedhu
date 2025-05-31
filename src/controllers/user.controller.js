@@ -4,6 +4,8 @@ import { Status } from "@prisma/client";
 import ExcelJS from "exceljs";
 import path from "path";
 import fs from "fs";
+import { mailOptions, transporter } from "../../utils/mail.js";
+import moment from "moment";
 export const getUsers = async (req, res) => {
   try {
     const {
@@ -174,6 +176,56 @@ export const updateUserStatus = async (req, res) => {
       status: status,
     },
   });
+
+  try {
+    transporter.sendMail({
+      ...mailOptions,
+      to: user.email,
+      subject:
+        status === "ACTIVE"
+          ? "Your account has been activated"
+          : "Your account status has been updated",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <div style="background-color: #4a7aff; padding: 15px; border-radius: 5px 5px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Account Status Update</h1>
+          </div>
+          <div style="padding: 20px; background-color: #f9f9f9;">
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">Hello ${
+              user.firstName
+            } ${user.lastName},</p>
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">
+              We're writing to inform you that your account status has been updated to <strong>${status}</strong>.
+              ${
+                status === "ACTIVE"
+                  ? "You can now log in and access all features of our learning platform."
+                  : "If you have any questions regarding this change, please contact our support team."
+              }
+            </p>
+            <div style="background-color: ${
+              status === "ACTIVE" ? "#e6f7e6" : "#f7e6e6"
+            }; border-left: 4px solid ${
+        status === "ACTIVE" ? "#4CAF50" : "#f44336"
+      }; margin: 20px 0; padding: 15px;">
+              <p style="margin: 0; font-size: 16px; color: #333;">
+                <strong>Account Status:</strong> ${status}
+              </p>
+            </div>
+            <p style="font-size: 16px; line-height: 1.5; color: #333;">
+              Thank you for being part of our learning community!
+            </p>
+          </div>
+          <div style="padding: 15px; text-align: center; background-color: #f1f1f1; border-radius: 0 0 5px 5px;">
+            <p style="margin: 0; font-size: 14px; color: #777;">
+              &copy; ${moment().year()} Learning Management System. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
   res.json({
     message: "User status updated successfully",
     success: true,
